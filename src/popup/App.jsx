@@ -48,7 +48,9 @@ const App = () => {
   return (
     <ChakraProvider>
       <div style={{ margin: "10px" }}>
-        <Text>{numImages !== undefined ? `${numImages} image tabs found.` : ""}</Text>
+        <Text fontSize="md">
+          {numImages !== undefined ? `${numImages} image tabs found.` : ""}
+        </Text>
         <Button
           style={{ marginTop: "10px" }}
           variant="outline"
@@ -60,6 +62,7 @@ const App = () => {
             await downloadImages(setIsClicked);
           }}
           isLoading={isClicked}
+          isDisabled={numImages === 0}
         >
           Download Images
         </Button>
