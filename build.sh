@@ -9,6 +9,7 @@ npm run build
 cp manifest.json dist/
 cp src/background.js dist/
 cp -r _locales dist/
+cp -r images dist/
 
 
 # zipにする（アップロード用）
