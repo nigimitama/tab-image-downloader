@@ -1,0 +1,12 @@
+{
+  "description": {
+    "message": "タブで開いた画像ファイルをまとめてダウンロードします",
+    "description": "manifest.jsonのdescription用"
+  },
+  "optionTabCloseDesc": {
+    "message": "画像をダウンロード後にタブを閉じる"
+  },
+  "optionDownloadDirDesc": {
+    "message": "ダウンロード場所はChromeの設定に従います。サブディレクトリに保存したい場合は以下に入力してください。"
+  }
+}

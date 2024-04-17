@@ -1,0 +1,19 @@
+{
+  "name": "Download Image in Tabs",
+  "description": "__MSG_description__",
+  "default_locale": "ja",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "tabs",
+    "downloads",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "./popup/index.html"
+  },
+  "options_page": "./options/index.html"
+}

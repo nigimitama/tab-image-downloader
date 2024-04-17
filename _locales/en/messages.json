@@ -1,0 +1,12 @@
+{
+  "description": {
+    "message": "Download image in all opened tabs by one click",
+    "description": "for the description field in manifest.json"
+  },
+  "optionTabCloseDesc": {
+    "message": "Close tabs after image download"
+  },
+  "optionDownloadDirDesc": {
+    "message": "The download location will follow your Chrome settings. If you want to save images in a subdirectory, enter it below."
+  }
+}
