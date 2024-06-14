@@ -17,6 +17,11 @@ export const getSyncData = async (keys) => {
   }
 };
 
+export const sleep = async (second) => {
+  // 指定秒数待つ関数
+  return new Promise((resolve) => setTimeout(resolve, 1000 * second));
+};
+
 const isImageURL = (url) => {
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"];
   const u = new URL(url);
@@ -39,16 +44,12 @@ export const getImageTabs = async () => {
 };
 
 export const downloadFile = (url, filename) => {
-  chrome.downloads.download(
-    {
-      url: url,
-      filename: filename,
-      saveAs: false, // 保存先の選択ダイアログを表示しない
-    },
-    (downloadId) => {
-      console.log(`File download started. Download ID: ${downloadId}`);
-    }
-  );
+  const downloading = chrome.downloads.download({
+    url: url,
+    filename: filename,
+    saveAs: false, // 保存先の選択ダイアログを表示しない
+  });
+  return downloading;
 };
 
 export const getFileName = (url) => {
