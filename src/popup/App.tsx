@@ -4,12 +4,11 @@ import { DownloadIcon } from "@chakra-ui/icons";
 import { Text, ChakraProvider } from "@chakra-ui/react";
 import { getImageTabs, getFileName, downloadFile, getSyncData, sleep } from "./modules";
 
-
 const App = () => {
-  const [numImages, setNumImages] = useState();
+  const [numImages, setNumImages] = useState<number | undefined>();
   const [isClicked, setIsClicked] = useState(false);
 
-  const downloadImages = async (setIsClicked) => {
+  const downloadImages = async (setIsClicked: (v: boolean) => void) => {
     if (chrome.storage === undefined) return null;
 
     setIsClicked(true);
@@ -21,6 +20,7 @@ const App = () => {
 
     const tabs = await getImageTabs();
     for (const tab of tabs) {
+      if (!tab.url) continue;
       const fileName = getFileName(tab.url);
       const isEmpty = downloadDir === null || downloadDir === "";
       const savePath = isEmpty ? fileName : `${downloadDir}/${fileName}`;
@@ -32,7 +32,7 @@ const App = () => {
             console.log(`File download started. Download ID: ${downloadId}`);
             await sleep(0.5);
             if (doClose) {
-              chrome.tabs.remove(tab.id, () => console.log(`Tab closed: ${tab.url}`));
+              chrome.tabs.remove(tab.id!, () => console.log(`Tab closed: ${tab.url}`));
             }
           },
           (error) => {

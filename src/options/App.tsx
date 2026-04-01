@@ -1,9 +1,23 @@
 import { useState } from "react";
-import { ChakraProvider, Checkbox, Button, Box, Icon, Text, Heading } from "@chakra-ui/react";
+import {
+  ChakraProvider,
+  Checkbox,
+  Button,
+  Box,
+  Icon,
+  Text,
+  Heading,
+} from "@chakra-ui/react";
 import { LuFolderCog } from "react-icons/lu";
 import { MdTab } from "react-icons/md";
-import { Input, InputLeftAddon, InputRightElement, InputGroup } from "@chakra-ui/react";
+import {
+  Input,
+  InputLeftAddon,
+  InputRightElement,
+  InputGroup,
+} from "@chakra-ui/react";
 import { setSyncData } from "./modules";
+import { Settings } from "@/background";
 
 const Header = () => {
   return (
@@ -16,9 +30,9 @@ const Header = () => {
 };
 
 const CloseTabAfterDownload = () => {
-  const [isChecked, setIsChecked] = useState(null);
+  const [isChecked, setIsChecked] = useState<boolean | null>(null);
 
-  const handleCheck = (event) => {
+  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log(`set(${event.target.checked})`);
     setIsChecked(event.target.checked);
     setSyncData("isCloseTabAfterDownload", event.target.checked);
@@ -26,14 +40,19 @@ const CloseTabAfterDownload = () => {
 
   // init isChecked
   if (chrome.storage !== undefined && isChecked === null) {
-    chrome.storage.sync.get(["isCloseTabAfterDownload"], (result) => {
+    chrome.storage.sync.get(["isCloseTabAfterDownload"], (result: Settings) => {
       setIsChecked(result.isCloseTabAfterDownload);
     });
   }
 
   return (
-    <Checkbox isChecked={isChecked} onChange={(event) => handleCheck(event)}>
-      {chrome.i18n === undefined ? "optionTabCloseDesc" : chrome.i18n.getMessage("optionTabCloseDesc")}
+    <Checkbox
+      isChecked={isChecked || false}
+      onChange={(event) => handleCheck(event)}
+    >
+      {chrome.i18n === undefined
+        ? "optionTabCloseDesc"
+        : chrome.i18n.getMessage("optionTabCloseDesc")}
     </Checkbox>
   );
 };
@@ -49,13 +68,16 @@ const DownloadDirSetting = () => {
     const input = document.getElementById("subdirectoryInput");
 
     if (chrome.storage === undefined) return null;
+    if (!(input instanceof HTMLInputElement)) return null;
+
     setSyncData("downloadDir", input.value);
     setDownloadDir(input.value);
   };
 
   // init isDefault
   if (chrome.storage !== undefined && downloadDir === "") {
-    chrome.storage.sync.get(["downloadDir"], (result) => {
+    chrome.storage.sync.get(["downloadDir"], (result: Settings) => {
+      if (!result.downloadDir) return;
       setDownloadDir(result.downloadDir);
     });
   }
@@ -63,9 +85,21 @@ const DownloadDirSetting = () => {
   return (
     <InputGroup size="md" style={{ width: "50em", marginTop: "1em" }}>
       <InputLeftAddon>Downloads/</InputLeftAddon>
-      <Input id="subdirectoryInput" type="text" pr="5rem" defaultValue={downloadDir} placeholder="Subdirectory Name" />
+      <Input
+        id="subdirectoryInput"
+        type="text"
+        pr="5rem"
+        defaultValue={downloadDir}
+        placeholder="Subdirectory Name"
+      />
       <InputRightElement width="5rem">
-        <Button h="1.75rem" colorScheme="blue" aria-label="DownloadPath" size="sm" onClick={saveValue}>
+        <Button
+          h="1.75rem"
+          colorScheme="blue"
+          aria-label="DownloadPath"
+          size="sm"
+          onClick={saveValue}
+        >
           Save
         </Button>
       </InputRightElement>
@@ -94,7 +128,9 @@ const App = () => {
         </Heading>
         <div style={{ margin: "15px" }}>
           <Text fontSize="lg">
-            {chrome.i18n === undefined ? "optionDownloadDirDesc" : chrome.i18n.getMessage("optionDownloadDirDesc")}
+            {chrome.i18n === undefined
+              ? "optionDownloadDirDesc"
+              : chrome.i18n.getMessage("optionDownloadDirDesc")}
           </Text>
 
           <DownloadDirSetting />
