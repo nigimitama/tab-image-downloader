@@ -6,6 +6,7 @@ import {
   InputLeftAddon,
   InputRightElement,
 } from "@chakra-ui/react";
+import { FaFolderOpen } from "react-icons/fa";
 import { setSyncData } from "../modules";
 import { Settings } from "@/background";
 
@@ -42,8 +43,14 @@ export const DownloadDirSetting = () => {
         placeholder="Subdirectory"
         fontSize="sm"
       />
-      <InputRightElement width="4rem">
-        <Button h="1.4rem" colorScheme="gray" size="xs" onClick={openFolder}>
+      <InputRightElement width="4.5rem">
+        <Button
+          h="1.6rem"
+          colorScheme="gray"
+          size="xs"
+          onClick={openFolder}
+          leftIcon={<FaFolderOpen />}
+        >
           Open
         </Button>
       </InputRightElement>
