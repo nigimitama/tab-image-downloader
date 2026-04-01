@@ -47,35 +47,39 @@ const CloseTabAfterDownload = () => {
 const DownloadDirSetting = () => {
   const [downloadDir, setDownloadDir] = useState("");
 
-  const saveValue = () => {
-    const input = document.getElementById("popupSubdirectoryInput");
+  useEffect(() => {
     if (chrome.storage === undefined) return;
-    if (!(input instanceof HTMLInputElement)) return;
-    setSyncData("downloadDir", input.value);
-    setDownloadDir(input.value);
+    chrome.storage.sync.get(["downloadDir"], (result: Settings) => {
+      if (result.downloadDir) setDownloadDir(result.downloadDir);
+    });
+  }, []);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.value;
+    setDownloadDir(newValue);
+    if (chrome.storage === undefined) return;
+    setSyncData("downloadDir", newValue);
   };
 
-  if (chrome.storage !== undefined && downloadDir === "") {
-    chrome.storage.sync.get(["downloadDir"], (result: Settings) => {
-      if (!result.downloadDir) return;
-      setDownloadDir(result.downloadDir);
-    });
-  }
+  const openFolder = () => {
+    if (chrome.downloads === undefined) return;
+    chrome.downloads.showDefaultFolder();
+  };
 
   return (
     <InputGroup size="sm">
       <InputLeftAddon fontSize="xs">Downloads/</InputLeftAddon>
       <Input
-        id="popupSubdirectoryInput"
         type="text"
         pr="4rem"
-        defaultValue={downloadDir}
+        value={downloadDir}
+        onChange={handleChange}
         placeholder="Subdirectory"
         fontSize="sm"
       />
       <InputRightElement width="4rem">
-        <Button h="1.4rem" colorScheme="blue" size="xs" onClick={saveValue}>
-          Save
+        <Button h="1.4rem" colorScheme="gray" size="xs" onClick={openFolder}>
+          Open
         </Button>
       </InputRightElement>
     </InputGroup>
