@@ -76,7 +76,7 @@ const App = () => {
         <ImageTabList tabs={imageTabs} />
 
         <Button
-          style={{ marginTop: "10px" }}
+          style={{ marginTop: "10px", display: "block", margin: "10px auto 0" }}
           variant="outline"
           colorScheme="blue"
           aria-label="Download"
