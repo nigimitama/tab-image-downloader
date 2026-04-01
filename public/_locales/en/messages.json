@@ -4,7 +4,7 @@
     "description": "for the description field in manifest.json"
   },
   "optionTabCloseDesc": {
-    "message": "Close tabs after image download"
+    "message": "Close the image tabs after downloading"
   },
   "optionDownloadDirDesc": {
     "message": "The download location will follow your Chrome settings. If you want to save images in a subdirectory, enter it below."
