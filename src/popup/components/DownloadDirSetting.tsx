@@ -34,13 +34,15 @@ export const DownloadDirSetting = () => {
 
   return (
     <InputGroup size="sm">
-      <InputLeftAddon fontSize="xs">Downloads/</InputLeftAddon>
+      <InputLeftAddon fontSize="xs">
+        Chrome's Download Location /
+      </InputLeftAddon>
       <Input
         type="text"
         pr="4rem"
         value={downloadDir}
         onChange={handleChange}
-        placeholder="Subdirectory"
+        placeholder="Subdirectory (optional)"
         fontSize="sm"
       />
       <InputRightElement width="4.5rem">

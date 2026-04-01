@@ -68,7 +68,7 @@ const App = () => {
 
   return (
     <ChakraProvider>
-      <div style={{ margin: "10px", width: "400px" }}>
+      <div style={{ margin: "10px", width: "500px" }}>
         <Text fontSize="md">
           {numImages !== undefined ? `${numImages} image tabs found.` : ""}
         </Text>
