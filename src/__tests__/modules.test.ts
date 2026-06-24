@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 import {
   isImageURL,
   isImageFormat,
@@ -133,8 +133,11 @@ describe('sleep', () => {
 })
 
 describe('getImageTabs', () => {
+  // chrome.tabs.query has callback+promise overloads; cast to Mock to avoid overload resolution issues
+  const queryMock = chrome.tabs.query as unknown as Mock
+
   beforeEach(() => {
-    vi.mocked(chrome.tabs.query).mockReset()
+    queryMock.mockReset()
   })
 
   it('filters tabs to only image tabs', async () => {
@@ -145,7 +148,7 @@ describe('getImageTabs', () => {
       { id: 4, url: undefined },
     ] as chrome.tabs.Tab[]
 
-    vi.mocked(chrome.tabs.query).mockResolvedValue(mockTabs)
+    queryMock.mockResolvedValue(mockTabs)
 
     const result = await getImageTabs()
     expect(result).toHaveLength(2)
@@ -154,7 +157,7 @@ describe('getImageTabs', () => {
   })
 
   it('returns empty array when no image tabs exist', async () => {
-    vi.mocked(chrome.tabs.query).mockResolvedValue([
+    queryMock.mockResolvedValue([
       { id: 1, url: 'https://example.com/' },
     ] as chrome.tabs.Tab[])
 
