@@ -7,7 +7,7 @@ import {
   InputRightElement,
 } from "@chakra-ui/react";
 import { FaFolderOpen } from "react-icons/fa";
-import { setSyncData } from "@/popup/storage";
+import { setSyncData } from "@/popup/chromeApi";
 import { Settings } from "@/background";
 
 export const DownloadDirSetting = () => {
