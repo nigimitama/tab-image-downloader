@@ -50,10 +50,47 @@ const downloadImages = async (
 const App = () => {
   const [imageSources, setImageSources] = useState<ImageSource[] | null>(null);
   const [isClicked, setIsClicked] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    getImageSources().then(setImageSources);
+    getImageSources().then((sources) => {
+      setImageSources(sources);
+      // Select every found image by default; the user can uncheck the ones to skip.
+      setSelectedIds(
+        new Set(
+          sources
+            .map((source) => source.tab.id)
+            .filter((id): id is number => id !== undefined),
+        ),
+      );
+    });
   }, []);
+
+  const toggleSelected = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const ids = (imageSources ?? [])
+      .map((source) => source.tab.id)
+      .filter((id): id is number => id !== undefined);
+    setSelectedIds((prev) => {
+      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id));
+      return allSelected ? new Set() : new Set(ids);
+    });
+  };
+
+  const selectedSources = (imageSources ?? []).filter(
+    (source) => source.tab.id !== undefined && selectedIds.has(source.tab.id),
+  );
 
   return (
     <ChakraProvider>
@@ -62,7 +99,12 @@ const App = () => {
           {imageSources !== null ? `${imageSources.length} image tabs found.` : ""}
         </Text>
 
-        <ImageTabList sources={imageSources ?? []} />
+        <ImageTabList
+          sources={imageSources ?? []}
+          selectedIds={selectedIds}
+          onToggle={toggleSelected}
+          onToggleAll={toggleAll}
+        />
 
         <Button
           style={{ marginTop: "10px", display: "block", margin: "10px auto 0" }}
@@ -71,9 +113,9 @@ const App = () => {
           aria-label="Download"
           size="lg"
           leftIcon={<DownloadIcon />}
-          onClick={() => downloadImages(imageSources ?? [], setIsClicked)}
+          onClick={() => downloadImages(selectedSources, setIsClicked)}
           isLoading={isClicked}
-          isDisabled={imageSources === null || imageSources.length === 0}
+          isDisabled={selectedSources.length === 0}
         >
           Download Images
         </Button>
