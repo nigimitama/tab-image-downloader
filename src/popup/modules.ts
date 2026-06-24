@@ -25,11 +25,11 @@ export const sleep = async (second: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, 1000 * second))
 }
 
-const isImageURL = (url: string): boolean => {
+export const isImageURL = (url: string): boolean => {
   return isImageFormat(url) || isTwitterImage(url)
 }
 
-const isImageFormat = (url: string): boolean => {
+export const isImageFormat = (url: string): boolean => {
   const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"]
   const u = new URL(url)
 
@@ -41,7 +41,7 @@ const isImageFormat = (url: string): boolean => {
   return false
 }
 
-const isTwitterImage = (url: string): boolean => {
+export const isTwitterImage = (url: string): boolean => {
   // twitterは https://pbs.twimg.com/media/Glfh8q2awAA8nXq?format=png&name=small のようになっている
   const u = new URL(url)
   const isTwitterMedia = u.host === "pbs.twimg.com" && u.pathname.startsWith("/media/")
