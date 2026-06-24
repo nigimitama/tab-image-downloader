@@ -3,14 +3,14 @@ export const setSyncData = (key: string, value: unknown) => {
   chrome.storage.sync.set({ [key]: value });
 };
 
-export const getSyncData = async (keys: string[]): Promise<Record<string, unknown>> => {
+export const getSyncData = async <T = Record<string, unknown>>(keys: string[]): Promise<T> => {
   try {
-    const items = await new Promise<Record<string, unknown>>((resolve, reject) => {
+    const items = await new Promise<T>((resolve, reject) => {
       chrome.storage.sync.get(keys, (result) => {
         if (chrome.runtime.lastError) {
           reject(chrome.runtime.lastError.message)
         } else {
-          resolve(result)
+          resolve(result as T)
         }
       })
     })

@@ -8,6 +8,7 @@ import {
   getSyncData,
   sleep,
 } from "./modules";
+import { Settings } from "@/background";
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload";
 import { DownloadDirSetting } from "./components/DownloadDirSetting";
 import { ImageTabList } from "./components/ImageTabList";
@@ -18,9 +19,9 @@ const downloadImages = async (setIsClicked: (v: boolean) => void) => {
   setIsClicked(true);
 
   try {
-    const storage = await getSyncData(["isCloseTabAfterDownload", "downloadDir"]);
+    const storage = await getSyncData<Settings>(["isCloseTabAfterDownload", "downloadDir"]);
     const doClose = storage.isCloseTabAfterDownload;
-    const downloadDir = storage.downloadDir as string | null;
+    const downloadDir = storage.downloadDir;
 
     const tabs = await getImageTabs();
     for (const tab of tabs) {
