@@ -28,6 +28,31 @@ export const getFileName = (url: string): string => {
   return fileName
 }
 
+export const isXPhotoPage = (url: string): boolean => {
+  try {
+    const u = new URL(url)
+    return (
+      (u.host === "x.com" || u.host === "twitter.com") &&
+      /^\/[^/]+\/status\/\d+\/photo\/\d+$/.test(u.pathname)
+    )
+  } catch {
+    return false
+  }
+}
+
+export const getXPhotoIndex = (url: string): number => {
+  const match = new URL(url).pathname.match(/\/photo\/(\d+)$/)
+  return match ? Number(match[1]) - 1 : 0
+}
+
+export const upgradeTwitterImageUrl = (url: string): string => {
+  const u = new URL(url)
+  if (u.host === "pbs.twimg.com" && u.pathname.startsWith("/media/")) {
+    u.searchParams.set("name", "orig")
+  }
+  return u.toString()
+}
+
 export const sleep = async (second: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, 1000 * second))
 }

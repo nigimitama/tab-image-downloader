@@ -3,10 +3,13 @@ import {
   isImageURL,
   isImageFormat,
   isTwitterImage,
+  isXPhotoPage,
+  getXPhotoIndex,
+  upgradeTwitterImageUrl,
   getFileName,
   sleep,
 } from '../popup/imageUrl'
-import { getImageTabs } from '../popup/chromeApi'
+import { getImageTabs, getImageSources } from '../popup/chromeApi'
 
 describe('isImageFormat', () => {
   it.each([
@@ -78,6 +81,58 @@ describe('isTwitterImage', () => {
   })
 })
 
+describe('isXPhotoPage', () => {
+  it.each([
+    'https://x.com/mitama64/status/1808838033971818871/photo/1',
+    'https://x.com/user/status/123456/photo/1',
+    'https://x.com/user/status/123456/photo/2',
+    'https://twitter.com/user/status/123456/photo/1',
+  ])('returns true for X photo page: %s', (url) => {
+    expect(isXPhotoPage(url)).toBe(true)
+  })
+
+  it.each([
+    'https://x.com/user/status/123456',
+    'https://x.com/user',
+    'https://example.com/user/status/123456/photo/1',
+    'https://x.com/user/status/abc/photo/1',
+    'https://x.com/user/status/123456/photo/',
+  ])('returns false for non-photo page: %s', (url) => {
+    expect(isXPhotoPage(url)).toBe(false)
+  })
+})
+
+describe('getXPhotoIndex', () => {
+  it('returns 0-based index from /photo/N', () => {
+    expect(getXPhotoIndex('https://x.com/user/status/123/photo/1')).toBe(0)
+    expect(getXPhotoIndex('https://x.com/user/status/123/photo/2')).toBe(1)
+    expect(getXPhotoIndex('https://x.com/user/status/123/photo/4')).toBe(3)
+  })
+})
+
+describe('upgradeTwitterImageUrl', () => {
+  it('sets name=orig for Twitter media URLs', () => {
+    expect(
+      upgradeTwitterImageUrl(
+        'https://pbs.twimg.com/media/abc123?format=jpg&name=small',
+      ),
+    ).toBe('https://pbs.twimg.com/media/abc123?format=jpg&name=orig')
+  })
+
+  it('adds name=orig when name param is missing', () => {
+    expect(
+      upgradeTwitterImageUrl(
+        'https://pbs.twimg.com/media/abc123?format=jpg',
+      ),
+    ).toBe('https://pbs.twimg.com/media/abc123?format=jpg&name=orig')
+  })
+
+  it('does not modify non-Twitter URLs', () => {
+    const url = 'https://example.com/photo.jpg'
+    expect(upgradeTwitterImageUrl(url)).toBe(url)
+  })
+})
+
 describe('isImageURL', () => {
   it('returns true for standard image URLs', () => {
     expect(isImageURL('https://example.com/photo.png')).toBe(true)
@@ -133,7 +188,6 @@ describe('sleep', () => {
 })
 
 describe('getImageTabs', () => {
-  // chrome.tabs.query has callback+promise overloads; cast to Mock to avoid overload resolution issues
   const queryMock = chrome.tabs.query as unknown as Mock
 
   beforeEach(() => {
@@ -163,5 +217,121 @@ describe('getImageTabs', () => {
 
     const result = await getImageTabs()
     expect(result).toHaveLength(0)
+  })
+})
+
+describe('getImageSources', () => {
+  const queryMock = chrome.tabs.query as unknown as Mock
+  const scriptMock = chrome.scripting.executeScript as unknown as Mock
+
+  beforeEach(() => {
+    queryMock.mockReset()
+    scriptMock.mockReset()
+  })
+
+  it('includes direct image tabs', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://example.com/photo.png' },
+    ] as chrome.tabs.Tab[])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe('https://example.com/photo.png')
+  })
+
+  it('extracts image URL from X photo page tabs', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://x.com/user/status/123/photo/1' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      { result: ['https://pbs.twimg.com/media/abc?format=jpg&name=large'] },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe(
+      'https://pbs.twimg.com/media/abc?format=jpg&name=orig',
+    )
+    expect(result[0].tab.url).toBe(
+      'https://x.com/user/status/123/photo/1',
+    )
+  })
+
+  it('skips X photo page tabs when no image is found', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://x.com/user/status/123/photo/1' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([{ result: [] }])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(0)
+  })
+
+  it('skips X photo page tabs when script injection fails', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://x.com/user/status/123/photo/1' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockRejectedValue(new Error('injection failed'))
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(0)
+  })
+
+  it('selects the correct image for /photo/2 with real URL example', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://x.com/Open_BrainPad/status/1984085417163964616/photo/2' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      {
+        result: [
+          'https://pbs.twimg.com/media/G4jcwZXbcAE4VPf?format=jpg&name=large',
+          'https://pbs.twimg.com/media/G4jczQaa8Agackz?format=jpg&name=large',
+          'https://pbs.twimg.com/media/G4jc1d1a4AAhxl2?format=jpg&name=large',
+        ],
+      },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe(
+      'https://pbs.twimg.com/media/G4jczQaa8Agackz?format=jpg&name=orig',
+    )
+  })
+
+  it('falls back to first image when photo index exceeds available images', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://x.com/user/status/123/photo/4' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      {
+        result: [
+          'https://pbs.twimg.com/media/img1?format=jpg&name=large',
+        ],
+      },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe(
+      'https://pbs.twimg.com/media/img1?format=jpg&name=orig',
+    )
+  })
+
+  it('handles mix of direct image tabs and X photo pages', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://example.com/photo.png' },
+      { id: 2, url: 'https://x.com/user/status/123/photo/1' },
+      { id: 3, url: 'https://example.com/page.html' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      { result: ['https://pbs.twimg.com/media/xyz?format=png&name=small'] },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(2)
+    expect(result[0].imageUrl).toBe('https://example.com/photo.png')
+    expect(result[1].imageUrl).toBe(
+      'https://pbs.twimg.com/media/xyz?format=png&name=orig',
+    )
   })
 })

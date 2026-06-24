@@ -19,6 +19,9 @@ const chromeMock = {
     download: vi.fn(),
     showDefaultFolder: vi.fn(),
   },
+  scripting: {
+    executeScript: vi.fn(),
+  },
   i18n: {
     getMessage: vi.fn((key: string) => key),
   },
