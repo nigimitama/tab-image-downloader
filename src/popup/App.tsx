@@ -47,27 +47,21 @@ const downloadImages = async (setIsClicked: (v: boolean) => void) => {
 };
 
 const App = () => {
-  const [imageTabs, setImageTabs] = useState<chrome.tabs.Tab[]>([]);
-  const [numImages, setNumImages] = useState<number | undefined>();
+  const [imageTabs, setImageTabs] = useState<chrome.tabs.Tab[] | null>(null);
   const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
-    const fetch = async () => {
-      const tabs = await getImageTabs();
-      setImageTabs(tabs);
-      setNumImages(tabs.length);
-    };
-    fetch();
+    getImageTabs().then(setImageTabs);
   }, []);
 
   return (
     <ChakraProvider>
       <div style={{ margin: "10px", width: "500px" }}>
         <Text fontSize="md">
-          {numImages !== undefined ? `${numImages} image tabs found.` : ""}
+          {imageTabs !== null ? `${imageTabs.length} image tabs found.` : ""}
         </Text>
 
-        <ImageTabList tabs={imageTabs} />
+        <ImageTabList tabs={imageTabs ?? []} />
 
         <Button
           style={{ marginTop: "10px", display: "block", margin: "10px auto 0" }}
@@ -78,7 +72,7 @@ const App = () => {
           leftIcon={<DownloadIcon />}
           onClick={() => downloadImages(setIsClicked)}
           isLoading={isClicked}
-          isDisabled={numImages === 0}
+          isDisabled={imageTabs === null || imageTabs.length === 0}
         >
           Download Images
         </Button>
