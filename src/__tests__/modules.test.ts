@@ -5,8 +5,8 @@ import {
   isTwitterImage,
   getFileName,
   sleep,
-  getImageTabs,
-} from '../popup/modules'
+} from '../popup/imageUrl'
+import { getImageTabs } from '../popup/chromeApi'
 
 describe('isImageFormat', () => {
   it.each([

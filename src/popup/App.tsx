@@ -1,13 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button, Text, ChakraProvider, Divider, Box } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
-import {
-  getImageTabs,
-  getFileName,
-  downloadFile,
-  getSyncData,
-  sleep,
-} from "./modules";
+import { getFileName, sleep } from "./imageUrl";
+import { getImageTabs, downloadFile, getSyncData } from "./chromeApi";
 import { Settings } from "@/background";
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload";
 import { DownloadDirSetting } from "./components/DownloadDirSetting";
