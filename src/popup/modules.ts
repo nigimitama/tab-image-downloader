@@ -1,4 +1,4 @@
-export { setSyncData, getSyncData } from "@/shared/storage";
+export { setSyncData, getSyncData } from "@/popup/storage";
 
 export const sleep = async (second: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, 1000 * second))
