@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head><title>14357815 - Gelbooru</title></head>
+<body>
+  <!-- Mirrors the DOM of a Gelbooru post page, e.g.
+       https://gelbooru.com/index.php?page=post&s=view&id=14357815
+       The displayed sample image is rendered in <img id="image">. The src here
+       is a relative local path so the e2e test can verify the extracted URL is
+       actually downloadable. The id/structure mirror the real page. -->
+  <div id="container">
+    <header><img class="logo" src="test.png" alt="logo"></header>
+    <section class="image-container note-container" data-id="14357815">
+      <picture>
+        <img id="image" class="object-fit-contain" src="test.jpg" alt="image">
+      </picture>
+    </section>
+    <div class="sidebar">
+      <span class="thumb"><img src="test.png" alt="related thumbnail"></span>
+    </div>
+  </div>
+</body>
+</html>

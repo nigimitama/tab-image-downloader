@@ -17,7 +17,12 @@ export default defineManifest({
     default_popup: "src/popup/index.html",
   },
   permissions: ["tabs", "downloads", "storage", "scripting"],
-  host_permissions: ["https://x.com/*", "https://twitter.com/*"],
+  host_permissions: [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://*.donmai.us/*",
+    "https://gelbooru.com/*",
+  ],
   background: {
     service_worker: "src/background.ts",
     type: "module",
