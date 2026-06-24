@@ -5,6 +5,7 @@ import {
   upgradeTwitterImageUrl,
   isBooruPostPage,
   isGelbooruPostPage,
+  isPixivArtworkPage,
 } from "@/popup/imageUrl"
 
 export const setSyncData = (key: string, value: unknown) => {
@@ -60,16 +61,40 @@ export const extractBooruImageUrl = async (tabId: number): Promise<string | null
   return results?.[0]?.result ?? null
 }
 
-// Gelbooru's CDN (img*.gelbooru.com) rejects requests without a Referer from
-// *.gelbooru.com.  chrome.downloads.download() sends no Referer, so direct
-// downloads silently receive an HTML page instead of the image.
+// Pixiv artwork pages render images from i.pimg.net. Extract the main
+// artwork image URL from the DOM.
+export const extractPixivImageUrl = async (tabId: number): Promise<string | null> => {
+  const results = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: () => {
+      // Prefer links to original-quality images
+      const originalLinks = document.querySelectorAll<HTMLAnchorElement>('a[href*="i.pimg.net/img-original/"]')
+      if (originalLinks.length > 0) {
+        return originalLinks[0].href
+      }
+      // Fall back to displayed master/regular images
+      const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pimg.net"]')
+      for (const img of imgs) {
+        if (img.src.includes("/img-master/") || img.src.includes("/img-original/")) {
+          return img.src
+        }
+      }
+      return null
+    },
+  })
+  return results?.[0]?.result ?? null
+}
+
+// Some CDNs (Gelbooru's img*.gelbooru.com, Pixiv's i.pimg.net) reject requests
+// without a proper Referer header.  chrome.downloads.download() sends no
+// Referer, so direct downloads may silently fail.
 //
-// Workaround: create a hidden iframe on the Gelbooru page that loads the image
-// URL.  The iframe request carries the correct Referer (from gelbooru.com), so
-// the CDN serves the real image.  Once the iframe has loaded, we inject a
-// script into it that re-fetches the image (same-origin at img*.gelbooru.com)
-// and returns a data-URL that chrome.downloads.download() can use.
-export const fetchGelbooruImageAsDataUrl = async (
+// Workaround: create a hidden iframe on the source page that loads the image
+// URL.  The iframe request carries the correct Referer (from the parent page),
+// so the CDN serves the real image.  Once the iframe has loaded, we inject a
+// script into it that re-fetches the image (same-origin) and returns a
+// data-URL that chrome.downloads.download() can use.
+export const fetchImageAsDataUrl = async (
   tabId: number,
   imageUrl: string,
 ): Promise<string | null> => {
@@ -163,10 +188,24 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
           const imageUrl = await extractBooruImageUrl(tab.id)
           if (imageUrl) {
             if (isGelbooruPostPage(tab.url)) {
-              const downloadUrl = await fetchGelbooruImageAsDataUrl(tab.id, imageUrl)
+              const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
               if (downloadUrl) {
                 return { tab, imageUrl, downloadUrl }
               }
+            }
+            return { tab, imageUrl }
+          }
+        } catch (e) {
+          console.error(`Failed to extract image from tab ${tab.id}:`, e)
+        }
+      }
+      if (isPixivArtworkPage(tab.url)) {
+        try {
+          const imageUrl = await extractPixivImageUrl(tab.id)
+          if (imageUrl) {
+            const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
+            if (downloadUrl) {
+              return { tab, imageUrl, downloadUrl }
             }
             return { tab, imageUrl }
           }
