@@ -23,13 +23,6 @@ export const getSyncData = async <T = Record<string, unknown>>(keys: string[]): 
   }
 }
 
-export const getImageTabs = async (): Promise<chrome.tabs.Tab[]> => {
-  const tabs = await chrome.tabs.query({ currentWindow: true })
-  const imageTabs = tabs.filter((tab) => tab.url !== undefined && isImageURL(tab.url))
-  console.log(`${imageTabs.length} image tabs found.`)
-  return imageTabs
-}
-
 export type ImageSource = {
   tab: chrome.tabs.Tab
   imageUrl: string
