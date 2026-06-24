@@ -8,29 +8,18 @@ export const isImageURL = (url: string): boolean => {
   return isImageFormat(url) || isTwitterImage(url)
 }
 
-export const isImageFormat = (url: string): boolean => {
-  const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg"]
-  const u = new URL(url)
+const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"]
 
-  for (const ext of imageExtensions) {
-    if (u.pathname.toLowerCase().endsWith(ext)) {
-      return true
-    }
-  }
-  return false
+export const isImageFormat = (url: string): boolean => {
+  const u = new URL(url)
+  return IMAGE_EXTENSIONS.some((ext) => u.pathname.toLowerCase().endsWith(`.${ext}`))
 }
 
 export const isTwitterImage = (url: string): boolean => {
-  // twitterは https://pbs.twimg.com/media/Glfh8q2awAA8nXq?format=png&name=small のようになっている
   const u = new URL(url)
   const isTwitterMedia = u.host === "pbs.twimg.com" && u.pathname.startsWith("/media/")
   if (!isTwitterMedia) return false
-
-  const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"]
-  for (const ext of imageExtensions) {
-    if (u.searchParams.get("format") === ext) return true
-  }
-  return false
+  return IMAGE_EXTENSIONS.includes(u.searchParams.get("format") ?? "")
 }
 
 export const getImageTabs = async (): Promise<chrome.tabs.Tab[]> => {
