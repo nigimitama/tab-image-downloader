@@ -21,5 +21,4 @@ export default defineManifest({
     service_worker: "src/background.ts",
     type: "module",
   },
-  options_page: "src/options/index.html",
 });
