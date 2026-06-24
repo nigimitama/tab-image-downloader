@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Checkbox, Text } from "@chakra-ui/react";
-import { setSyncData } from "../modules";
+import { setSyncData } from "@/shared/storage";
 import { Settings } from "@/background";
 
 export const CloseTabAfterDownload = () => {
