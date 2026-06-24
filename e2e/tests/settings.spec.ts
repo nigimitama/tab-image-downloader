@@ -125,10 +125,14 @@ test("persists settings across popup reopens", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
 
-  // Wait for storage-loaded state before interacting
+  // Ensure checkbox is checked before toggling — earlier tests may have changed it
   const checkbox = popup1.getByRole("checkbox");
-  await expect(checkbox).toBeChecked({ timeout: 5_000 });
-  // Uncheck (default is checked/true); force to bypass Chakra overlay
+  await expect(checkbox).toBeAttached({ timeout: 5_000 });
+  if (!(await checkbox.isChecked())) {
+    await checkbox.check({ force: true });
+    await popup1.waitForTimeout(500);
+  }
+  // Now uncheck to verify this state persists
   await checkbox.uncheck({ force: true });
   await expect(checkbox).not.toBeChecked();
 
