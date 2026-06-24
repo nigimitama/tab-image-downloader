@@ -33,6 +33,8 @@ const downloadImages = async (setIsClicked: (v: boolean) => void) => {
         const downloadId = await downloadFile(tab.url, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
         if (doClose) {
+          // chrome.downloads.download resolves when the download starts, not completes.
+          // Wait briefly so the browser registers the download before the tab is closed.
           await sleep(0.5);
           chrome.tabs.remove(tab.id, () =>
             console.log(`Tab closed: ${tab.url}`),
