@@ -1,11 +1,12 @@
 import { Box } from "@chakra-ui/react";
+import type { ImageSource } from "@/popup/chromeApi";
 
 type Props = {
-  tabs: chrome.tabs.Tab[];
+  sources: ImageSource[];
 };
 
-export const ImageTabList = ({ tabs }: Props) => {
-  if (tabs.length === 0) return null;
+export const ImageTabList = ({ sources }: Props) => {
+  if (sources.length === 0) return null;
 
   return (
     <Box
@@ -16,9 +17,9 @@ export const ImageTabList = ({ tabs }: Props) => {
       borderColor="gray.200"
       borderRadius="md"
     >
-      {tabs.map((tab) => (
+      {sources.map((source) => (
         <Box
-          key={tab.id}
+          key={source.tab.id}
           display="flex"
           alignItems="center"
           gap={2}
@@ -27,7 +28,7 @@ export const ImageTabList = ({ tabs }: Props) => {
           _notLast={{ borderBottomWidth: "1px", borderColor: "gray.100" }}
         >
           <img
-            src={tab.url}
+            src={source.imageUrl}
             alt=""
             style={{
               width: "48px",
@@ -39,10 +40,10 @@ export const ImageTabList = ({ tabs }: Props) => {
             }}
           />
           <a
-            href={tab.url}
+            href={source.tab.url}
             target="_blank"
             rel="noreferrer"
-            title={tab.url}
+            title={source.imageUrl}
             style={{
               fontSize: "12px",
               color: "#3182ce",
@@ -53,7 +54,7 @@ export const ImageTabList = ({ tabs }: Props) => {
               minWidth: 0,
             }}
           >
-            {tab.url}
+            {source.imageUrl}
           </a>
         </Box>
       ))}

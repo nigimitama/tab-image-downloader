@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { Button, Text, ChakraProvider, Divider, Box } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
 import { getFileName, sleep } from "./imageUrl";
-import { getImageTabs, downloadFile, getSyncData } from "./chromeApi";
+import { getImageSources, downloadFile, getSyncData, type ImageSource } from "./chromeApi";
 import { Settings } from "@/background";
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload";
 import { DownloadDirSetting } from "./components/DownloadDirSetting";
 import { ImageTabList } from "./components/ImageTabList";
 
-const downloadImages = async (setIsClicked: (v: boolean) => void) => {
+const downloadImages = async (
+  sources: ImageSource[],
+  setIsClicked: (v: boolean) => void,
+) => {
   if (chrome.storage === undefined) return;
 
   setIsClicked(true);
@@ -18,25 +21,25 @@ const downloadImages = async (setIsClicked: (v: boolean) => void) => {
     const doClose = storage.isCloseTabAfterDownload;
     const downloadDir = storage.downloadDir;
 
-    const tabs = await getImageTabs();
-    for (const tab of tabs) {
-      if (!tab.url || tab.id === undefined) continue;
-      const fileName = getFileName(tab.url);
+    for (const source of sources) {
+      const tabId = source.tab.id;
+      if (tabId === undefined) continue;
+      const fileName = getFileName(source.imageUrl);
       const isEmpty = downloadDir === null || downloadDir === "";
       const savePath = isEmpty ? fileName : `${downloadDir}/${fileName}`;
       try {
-        const downloadId = await downloadFile(tab.url, savePath);
+        const downloadId = await downloadFile(source.imageUrl, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
         if (doClose) {
           // chrome.downloads.download resolves when the download starts, not completes.
           // Wait briefly so the browser registers the download before the tab is closed.
           await sleep(0.5);
-          chrome.tabs.remove(tab.id, () =>
-            console.log(`Tab closed: ${tab.url}`),
+          chrome.tabs.remove(tabId, () =>
+            console.log(`Tab closed: ${source.tab.url}`),
           );
         }
       } catch (error) {
-        console.error(`Download failed: ${error} | savePath=${savePath}, URL=${tab.url}`);
+        console.error(`Download failed: ${error} | savePath=${savePath}, URL=${source.imageUrl}`);
       }
     }
   } finally {
@@ -45,21 +48,21 @@ const downloadImages = async (setIsClicked: (v: boolean) => void) => {
 };
 
 const App = () => {
-  const [imageTabs, setImageTabs] = useState<chrome.tabs.Tab[] | null>(null);
+  const [imageSources, setImageSources] = useState<ImageSource[] | null>(null);
   const [isClicked, setIsClicked] = useState(false);
 
   useEffect(() => {
-    getImageTabs().then(setImageTabs);
+    getImageSources().then(setImageSources);
   }, []);
 
   return (
     <ChakraProvider>
       <div style={{ margin: "10px", width: "500px" }}>
         <Text fontSize="md">
-          {imageTabs !== null ? `${imageTabs.length} image tabs found.` : ""}
+          {imageSources !== null ? `${imageSources.length} image tabs found.` : ""}
         </Text>
 
-        <ImageTabList tabs={imageTabs ?? []} />
+        <ImageTabList sources={imageSources ?? []} />
 
         <Button
           style={{ marginTop: "10px", display: "block", margin: "10px auto 0" }}
@@ -68,9 +71,9 @@ const App = () => {
           aria-label="Download"
           size="lg"
           leftIcon={<DownloadIcon />}
-          onClick={() => downloadImages(setIsClicked)}
+          onClick={() => downloadImages(imageSources ?? [], setIsClicked)}
           isLoading={isClicked}
-          isDisabled={imageTabs === null || imageTabs.length === 0}
+          isDisabled={imageSources === null || imageSources.length === 0}
         >
           Download Images
         </Button>
