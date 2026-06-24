@@ -39,7 +39,7 @@ test("excludes non-image tabs from count", async ({
   const imgPage = await context.newPage();
   await imgPage.goto(`http://127.0.0.1:${imageServer.port}/test.png`);
   const htmlPage = await context.newPage();
-  await htmlPage.goto("https://example.com");
+  await htmlPage.goto(`http://127.0.0.1:${imageServer.port}/page.html`);
 
   const popup = await context.newPage();
   await popup.goto(
