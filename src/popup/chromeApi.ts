@@ -4,6 +4,7 @@ import {
   getXPhotoIndex,
   upgradeTwitterImageUrl,
   isBooruPostPage,
+  isGelbooruPostPage,
 } from "@/popup/imageUrl"
 
 export const setSyncData = (key: string, value: unknown) => {
@@ -32,6 +33,7 @@ export const getSyncData = async <T = Record<string, unknown>>(keys: string[]): 
 export type ImageSource = {
   tab: chrome.tabs.Tab
   imageUrl: string
+  downloadUrl?: string
 }
 
 export const extractImageUrlsFromTab = async (tabId: number): Promise<string[]> => {
@@ -56,6 +58,80 @@ export const extractBooruImageUrl = async (tabId: number): Promise<string | null
     },
   })
   return results?.[0]?.result ?? null
+}
+
+// Gelbooru's CDN (img*.gelbooru.com) rejects requests without a Referer from
+// *.gelbooru.com.  chrome.downloads.download() sends no Referer, so direct
+// downloads silently receive an HTML page instead of the image.
+//
+// Workaround: create a hidden iframe on the Gelbooru page that loads the image
+// URL.  The iframe request carries the correct Referer (from gelbooru.com), so
+// the CDN serves the real image.  Once the iframe has loaded, we inject a
+// script into it that re-fetches the image (same-origin at img*.gelbooru.com)
+// and returns a data-URL that chrome.downloads.download() can use.
+export const fetchGelbooruImageAsDataUrl = async (
+  tabId: number,
+  imageUrl: string,
+): Promise<string | null> => {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    world: "MAIN",
+    func: (url: string) => {
+      const existing = document.getElementById("__tid_loader")
+      if (existing) existing.remove()
+      const iframe = document.createElement("iframe")
+      iframe.id = "__tid_loader"
+      iframe.src = url
+      iframe.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0"
+      document.body.appendChild(iframe)
+    },
+    args: [imageUrl],
+  })
+
+  let dataUrl: string | null = null
+  for (let attempt = 0; attempt < 15; attempt++) {
+    await new Promise((r) => setTimeout(r, 500))
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId, allFrames: true },
+        world: "MAIN",
+        func: async () => {
+          if (!document.contentType?.startsWith("image/")) return null
+          try {
+            const res = await fetch(document.URL)
+            if (!res.ok) return null
+            const blob = await res.blob()
+            return await new Promise<string>((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result as string)
+              reader.readAsDataURL(blob)
+            })
+          } catch {
+            return null
+          }
+        },
+      })
+      for (const r of results) {
+        if (r.result) {
+          dataUrl = r.result as string
+          break
+        }
+      }
+      if (dataUrl) break
+    } catch {
+      // iframe not ready or injection failed — retry
+    }
+  }
+
+  chrome.scripting
+    .executeScript({
+      target: { tabId },
+      world: "MAIN",
+      func: () => document.getElementById("__tid_loader")?.remove(),
+    })
+    .catch(() => {})
+
+  return dataUrl
 }
 
 export const getImageSources = async (): Promise<ImageSource[]> => {
@@ -86,6 +162,12 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
         try {
           const imageUrl = await extractBooruImageUrl(tab.id)
           if (imageUrl) {
+            if (isGelbooruPostPage(tab.url)) {
+              const downloadUrl = await fetchGelbooruImageAsDataUrl(tab.id, imageUrl)
+              if (downloadUrl) {
+                return { tab, imageUrl, downloadUrl }
+              }
+            }
             return { tab, imageUrl }
           }
         } catch (e) {

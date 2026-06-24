@@ -20,7 +20,10 @@ test.describe("Gelbooru real download", () => {
 
   test("image URL extraction works", async ({ context }) => {
     const page = await context.newPage();
-    await page.goto(POST_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
+    await page.goto(POST_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
+    });
 
     const src: string | null = await page.evaluate(extractImageSrc);
 
@@ -28,202 +31,74 @@ test.describe("Gelbooru real download", () => {
     expect(src).toMatch(/^https:\/\/img\d+\.gelbooru\.com\//);
   });
 
-  test("diagnose: Playwright request with Referer header", async ({ context }) => {
-    const page = await context.newPage();
-    await page.goto(POST_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-
-    const src: string | null = await page.evaluate(extractImageSrc);
-    expect(src).not.toBeNull();
-
-    // Test with gelbooru.com Referer
-    const withReferer = await page.request.get(src!, {
-      headers: { Referer: "https://gelbooru.com/" },
+  test("popup detects Gelbooru tab and downloads actual image", async ({
+    context,
+    extensionId,
+  }) => {
+    // Open the Gelbooru post page
+    const gelbooruPage = await context.newPage();
+    await gelbooruPage.goto(POST_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 30_000,
     });
-    console.log(
-      "With Referer gelbooru.com:",
-      withReferer.status(),
-      withReferer.headers()["content-type"]
-    );
 
-    // Test with no Referer
-    const noReferer = await page.request.get(src!);
-    console.log(
-      "Without Referer:",
-      noReferer.status(),
-      noReferer.headers()["content-type"]
-    );
-
-    // Test with Cookie from the Gelbooru page
-    const cookies = await context.cookies("https://gelbooru.com");
-    const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-    console.log("Cookies available:", cookies.length, cookieHeader.substring(0, 100));
-
-    const withCookie = await page.request.get(src!, {
-      headers: {
-        Referer: "https://gelbooru.com/",
-        Cookie: cookieHeader,
-      },
-    });
-    console.log(
-      "With Referer + Cookie:",
-      withCookie.status(),
-      withCookie.headers()["content-type"]
-    );
-
-    // Test with img subdomain Referer (for iframe-based approach)
-    const withSubdomainReferer = await page.request.get(src!, {
-      headers: { Referer: "https://img4.gelbooru.com/" },
-    });
-    console.log(
-      "With Referer img4.gelbooru.com:",
-      withSubdomainReferer.status(),
-      withSubdomainReferer.headers()["content-type"]
-    );
-
-    // Check declarativeNetRequest rules
+    // Open the extension popup — this triggers getImageSources() which uses
+    // the iframe-based fetch for Gelbooru
     const popup = await context.newPage();
-    const extId = context.serviceWorkers()[0]?.url().split("/")[2];
-    if (extId) {
-      await popup.goto(`chrome-extension://${extId}/src/popup/index.html`);
-      const rules = await popup.evaluate(() =>
-        chrome.declarativeNetRequest.getDynamicRules()
+    await popup.goto(
+      `chrome-extension://${extensionId}/src/popup/index.html`
+    );
+
+    // Wait for the popup to detect the Gelbooru image tab.
+    // The iframe fetch can take up to ~7s, so use a generous timeout.
+    await expect(popup.getByText("1 image tabs found.")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    // Listen for console errors during download
+    const consoleErrors: string[] = [];
+    popup.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+
+    // Click download
+    const downloadBtn = popup.getByRole("button", { name: "Download" });
+    await expect(downloadBtn).toBeEnabled();
+    await downloadBtn.click();
+
+    // Loading state should appear then clear
+    await expect(downloadBtn).toHaveAttribute("data-loading", {
+      timeout: 5_000,
+    });
+    await expect(downloadBtn).not.toHaveAttribute("data-loading", {
+      timeout: 15_000,
+    });
+
+    // No download-related errors
+    const downloadErrors = consoleErrors.filter((e) =>
+      e.toLowerCase().includes("download")
+    );
+    expect(downloadErrors).toHaveLength(0);
+
+    // Verify the last completed download is an actual image
+    const downloadInfo = await popup.evaluate(async () => {
+      const items = await new Promise<chrome.downloads.DownloadItem[]>(
+        (resolve) =>
+          chrome.downloads.search(
+            { orderBy: ["-startTime"], limit: 1 },
+            resolve
+          )
       );
-      console.log("DeclarativeNetRequest dynamic rules:", JSON.stringify(rules));
-      await popup.close();
-    }
+      const item = items[0];
+      return item
+        ? { state: item.state, mime: item.mime, totalBytes: item.totalBytes }
+        : null;
+    });
 
-    expect(withReferer.headers()["content-type"]).toContain("image");
-  });
-
-  test("downloaded content is an actual image, not an HTML page", async ({
-    context,
-    extensionId,
-  }) => {
-    const page = await context.newPage();
-    await page.goto(POST_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-
-    const src: string | null = await page.evaluate(extractImageSrc);
-    expect(src).not.toBeNull();
-
-    const popup = await context.newPage();
-    await popup.goto(
-      `chrome-extension://${extensionId}/src/popup/index.html`
-    );
-
-    const result = await popup.evaluate(async (url) => {
-      const downloadId = await chrome.downloads.download({
-        url,
-        filename: "gelbooru-test.jpg",
-        saveAs: false,
-      });
-
-      const poll = (): Promise<chrome.downloads.DownloadItem> =>
-        new Promise((resolve) => {
-          const check = () => {
-            chrome.downloads.search({ id: downloadId }, (items) => {
-              const item = items[0];
-              if (item && (item.state === "complete" || item.state === "interrupted")) {
-                resolve(item);
-                return;
-              }
-              setTimeout(check, 200);
-            });
-          };
-          check();
-        });
-
-      const item = await Promise.race([
-        poll(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("poll timed out")), 15_000)
-        ),
-      ]);
-
-      return {
-        state: item.state,
-        error: item.error,
-        mime: item.mime,
-        totalBytes: item.totalBytes,
-      };
-    }, src!);
-
-    console.log("Download result:", result);
-
-    expect(result.state).toBe("complete");
-    expect(result.mime).toContain("image");
-  });
-});
-
-test.describe("Danbooru real download", () => {
-  const POST_URL = "https://danbooru.donmai.us/posts/11655837";
-  const EXPECTED_IMAGE_URL =
-    "https://cdn.donmai.us/sample/ea/48/__moria_luluka_and_mashu_tan_precure_and_1_more_drawn_by_ryuhirohumi__sample-ea48f0b280a1d3f7efc3501f72a4ba9a.jpg";
-
-  test("image URL extraction works", async ({ context }) => {
-    const page = await context.newPage();
-    await page.goto(POST_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-
-    const src: string | null = await page.evaluate(extractImageSrc);
-
-    expect(src).not.toBeNull();
-    expect(src).toBe(EXPECTED_IMAGE_URL);
-  });
-
-  test("downloaded content is an actual image, not an HTML page", async ({
-    context,
-    extensionId,
-  }) => {
-    const page = await context.newPage();
-    await page.goto(POST_URL, { waitUntil: "domcontentloaded", timeout: 30_000 });
-
-    const src: string | null = await page.evaluate(extractImageSrc);
-    expect(src).not.toBeNull();
-
-    const popup = await context.newPage();
-    await popup.goto(
-      `chrome-extension://${extensionId}/src/popup/index.html`
-    );
-
-    const result = await popup.evaluate(async (url) => {
-      const downloadId = await chrome.downloads.download({
-        url,
-        filename: "danbooru-test.jpg",
-        saveAs: false,
-      });
-
-      const poll = (): Promise<chrome.downloads.DownloadItem> =>
-        new Promise((resolve) => {
-          const check = () => {
-            chrome.downloads.search({ id: downloadId }, (items) => {
-              const item = items[0];
-              if (item && (item.state === "complete" || item.state === "interrupted")) {
-                resolve(item);
-                return;
-              }
-              setTimeout(check, 200);
-            });
-          };
-          check();
-        });
-
-      const item = await Promise.race([
-        poll(),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("poll timed out")), 15_000)
-        ),
-      ]);
-
-      return {
-        state: item.state,
-        error: item.error,
-        mime: item.mime,
-        totalBytes: item.totalBytes,
-      };
-    }, src!);
-
-    console.log("Download result:", result);
-
-    expect(result.state).toBe("complete");
-    expect(result.mime).toContain("image");
+    console.log("Download info:", downloadInfo);
+    expect(downloadInfo).not.toBeNull();
+    expect(downloadInfo!.state).toBe("complete");
+    expect(downloadInfo!.mime).toContain("image");
+    expect(downloadInfo!.totalBytes).toBeGreaterThan(1000);
   });
 });

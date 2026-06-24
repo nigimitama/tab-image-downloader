@@ -28,7 +28,7 @@ const downloadImages = async (
       const isEmpty = downloadDir === null || downloadDir === "";
       const savePath = isEmpty ? fileName : `${downloadDir}/${fileName}`;
       try {
-        const downloadId = await downloadFile(source.imageUrl, savePath);
+        const downloadId = await downloadFile(source.downloadUrl ?? source.imageUrl, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
         if (doClose) {
           // chrome.downloads.download resolves when the download starts, not completes.
