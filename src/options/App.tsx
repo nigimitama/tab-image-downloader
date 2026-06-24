@@ -1,8 +1,5 @@
-import { useState } from "react";
 import {
   ChakraProvider,
-  Checkbox,
-  Button,
   Box,
   Icon,
   Text,
@@ -10,14 +7,8 @@ import {
 } from "@chakra-ui/react";
 import { LuFolderCog } from "react-icons/lu";
 import { MdTab } from "react-icons/md";
-import {
-  Input,
-  InputLeftAddon,
-  InputRightElement,
-  InputGroup,
-} from "@chakra-ui/react";
-import { setSyncData } from "./modules";
-import { Settings } from "@/background";
+import { CloseTabAfterDownload } from "@/popup/components/CloseTabAfterDownload";
+import { DownloadDirSetting } from "@/popup/components/DownloadDirSetting";
 
 const Header = () => {
   return (
@@ -26,84 +17,6 @@ const Header = () => {
         Option
       </Heading>
     </Box>
-  );
-};
-
-const CloseTabAfterDownload = () => {
-  const [isChecked, setIsChecked] = useState<boolean | null>(null);
-
-  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(`set(${event.target.checked})`);
-    setIsChecked(event.target.checked);
-    setSyncData("isCloseTabAfterDownload", event.target.checked);
-  };
-
-  // init isChecked
-  if (chrome.storage !== undefined && isChecked === null) {
-    chrome.storage.sync.get(["isCloseTabAfterDownload"], (result: Settings) => {
-      setIsChecked(result.isCloseTabAfterDownload);
-    });
-  }
-
-  return (
-    <Checkbox
-      isChecked={isChecked || false}
-      onChange={(event) => handleCheck(event)}
-    >
-      {chrome.i18n === undefined
-        ? "optionTabCloseDesc"
-        : chrome.i18n.getMessage("optionTabCloseDesc")}
-    </Checkbox>
-  );
-};
-
-const DownloadDirSetting = () => {
-  /*
-    showDirectoryPicker() などを使ってもパスは取得できなかったので、
-    ディレクトリのパスを指定してもらうのではなく、
-    Chromeに設定している保存先の下にディレクトリを作りたい人向けの機能とする
-  */
-  const [downloadDir, setDownloadDir] = useState("");
-  const saveValue = () => {
-    const input = document.getElementById("subdirectoryInput");
-
-    if (chrome.storage === undefined) return null;
-    if (!(input instanceof HTMLInputElement)) return null;
-
-    setSyncData("downloadDir", input.value);
-    setDownloadDir(input.value);
-  };
-
-  // init isDefault
-  if (chrome.storage !== undefined && downloadDir === "") {
-    chrome.storage.sync.get(["downloadDir"], (result: Settings) => {
-      if (!result.downloadDir) return;
-      setDownloadDir(result.downloadDir);
-    });
-  }
-
-  return (
-    <InputGroup size="md" style={{ width: "50em", marginTop: "1em" }}>
-      <InputLeftAddon>Downloads/</InputLeftAddon>
-      <Input
-        id="subdirectoryInput"
-        type="text"
-        pr="5rem"
-        defaultValue={downloadDir}
-        placeholder="Subdirectory Name"
-      />
-      <InputRightElement width="5rem">
-        <Button
-          h="1.75rem"
-          colorScheme="blue"
-          aria-label="DownloadPath"
-          size="sm"
-          onClick={saveValue}
-        >
-          Save
-        </Button>
-      </InputRightElement>
-    </InputGroup>
   );
 };
 
