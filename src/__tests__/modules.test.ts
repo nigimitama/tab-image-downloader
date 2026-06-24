@@ -9,7 +9,7 @@ import {
   getFileName,
   sleep,
 } from '../popup/imageUrl'
-import { getImageTabs, getImageSources } from '../popup/chromeApi'
+import { getImageSources } from '../popup/chromeApi'
 
 describe('isImageFormat', () => {
   it.each([
@@ -184,39 +184,6 @@ describe('sleep', () => {
     vi.advanceTimersByTime(1000)
     await expect(promise).resolves.toBeUndefined()
     vi.useRealTimers()
-  })
-})
-
-describe('getImageTabs', () => {
-  const queryMock = chrome.tabs.query as unknown as Mock
-
-  beforeEach(() => {
-    queryMock.mockReset()
-  })
-
-  it('filters tabs to only image tabs', async () => {
-    const mockTabs = [
-      { id: 1, url: 'https://example.com/photo.png' },
-      { id: 2, url: 'https://example.com/page.html' },
-      { id: 3, url: 'https://pbs.twimg.com/media/abc?format=jpg&name=orig' },
-      { id: 4, url: undefined },
-    ] as chrome.tabs.Tab[]
-
-    queryMock.mockResolvedValue(mockTabs)
-
-    const result = await getImageTabs()
-    expect(result).toHaveLength(2)
-    expect(result[0].id).toBe(1)
-    expect(result[1].id).toBe(3)
-  })
-
-  it('returns empty array when no image tabs exist', async () => {
-    queryMock.mockResolvedValue([
-      { id: 1, url: 'https://example.com/' },
-    ] as chrome.tabs.Tab[])
-
-    const result = await getImageTabs()
-    expect(result).toHaveLength(0)
   })
 })
 

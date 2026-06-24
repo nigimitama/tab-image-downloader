@@ -9,10 +9,12 @@ export const isImageFormat = (url: string): boolean => {
   return IMAGE_EXTENSIONS.some((ext) => u.pathname.toLowerCase().endsWith(`.${ext}`))
 }
 
+const isTwitterMediaUrl = (u: URL): boolean =>
+  u.host === "pbs.twimg.com" && u.pathname.startsWith("/media/")
+
 export const isTwitterImage = (url: string): boolean => {
   const u = new URL(url)
-  const isTwitterMedia = u.host === "pbs.twimg.com" && u.pathname.startsWith("/media/")
-  if (!isTwitterMedia) return false
+  if (!isTwitterMediaUrl(u)) return false
   return IMAGE_EXTENSIONS.includes(u.searchParams.get("format") ?? "")
 }
 
@@ -47,7 +49,7 @@ export const getXPhotoIndex = (url: string): number => {
 
 export const upgradeTwitterImageUrl = (url: string): string => {
   const u = new URL(url)
-  if (u.host === "pbs.twimg.com" && u.pathname.startsWith("/media/")) {
+  if (isTwitterMediaUrl(u)) {
     u.searchParams.set("name", "orig")
   }
   return u.toString()
