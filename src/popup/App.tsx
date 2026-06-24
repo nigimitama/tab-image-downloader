@@ -17,39 +17,33 @@ const downloadImages = async (setIsClicked: (v: boolean) => void) => {
 
   setIsClicked(true);
 
-  const storage = await getSyncData(["isCloseTabAfterDownload", "downloadDir"]);
-  const doClose = storage.isCloseTabAfterDownload;
-  const downloadDir = storage.downloadDir;
+  try {
+    const storage = await getSyncData(["isCloseTabAfterDownload", "downloadDir"]);
+    const doClose = storage.isCloseTabAfterDownload;
+    const downloadDir = storage.downloadDir as string | null;
 
-  const tabs = await getImageTabs();
-  for (const tab of tabs) {
-    if (!tab.url) continue;
-    const fileName = getFileName(tab.url);
-    const isEmpty = downloadDir === null || downloadDir === "";
-    const savePath = isEmpty ? fileName : `${downloadDir}/${fileName}`;
-    try {
-      const downloading = downloadFile(tab.url, savePath);
-      downloading.then(
-        async (downloadId) => {
-          console.log(`File download started. Download ID: ${downloadId}`);
+    const tabs = await getImageTabs();
+    for (const tab of tabs) {
+      if (!tab.url || tab.id === undefined) continue;
+      const fileName = getFileName(tab.url);
+      const isEmpty = downloadDir === null || downloadDir === "";
+      const savePath = isEmpty ? fileName : `${downloadDir}/${fileName}`;
+      try {
+        const downloadId = await downloadFile(tab.url, savePath);
+        console.log(`File download started. Download ID: ${downloadId}`);
+        if (doClose) {
           await sleep(0.5);
-          if (doClose) {
-            chrome.tabs.remove(tab.id!, () =>
-              console.log(`Tab closed: ${tab.url}`),
-            );
-          }
-        },
-        (error) => {
-          console.log(`Download failed: ${error}`);
-        },
-      );
-    } catch (error) {
-      console.error(`Error ${error} | savePath=${savePath}, URL=${tab.url}`);
-      throw error;
+          chrome.tabs.remove(tab.id, () =>
+            console.log(`Tab closed: ${tab.url}`),
+          );
+        }
+      } catch (error) {
+        console.error(`Download failed: ${error} | savePath=${savePath}, URL=${tab.url}`);
+      }
     }
+  } finally {
+    setIsClicked(false);
   }
-
-  setIsClicked(false);
 };
 
 const App = () => {
