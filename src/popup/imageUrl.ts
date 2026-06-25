@@ -92,6 +92,19 @@ export const isYanderePostPage = (url: string): boolean => {
 export const isBooruPostPage = (url: string): boolean =>
   isDanbooruPostPage(url) || isGelbooruPostPage(url) || isYanderePostPage(url)
 
+// Pixiv artwork pages: /artworks/<id> (with optional language prefix like /en/)
+export const isPixivArtworkPage = (url: string): boolean => {
+  try {
+    const u = new URL(url)
+    return (
+      (u.host === "www.pixiv.net" || u.host === "pixiv.net") &&
+      /^(\/[a-z]{2})?\/artworks\/\d+$/.test(u.pathname)
+    )
+  } catch {
+    return false
+  }
+}
+
 export const upgradeTwitterImageUrl = (url: string): string => {
   const u = new URL(url)
   if (isTwitterMediaUrl(u)) {

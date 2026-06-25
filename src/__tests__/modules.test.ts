@@ -12,6 +12,7 @@ import {
   isGelbooruPostPage,
   isYanderePostPage,
   isBooruPostPage,
+  isPixivArtworkPage,
 } from '../popup/imageUrl'
 import { getImageSources } from '../popup/chromeApi'
 
@@ -192,6 +193,29 @@ describe('isBooruPostPage', () => {
   })
 })
 
+describe('isPixivArtworkPage', () => {
+  it.each([
+    'https://www.pixiv.net/artworks/12345678',
+    'https://www.pixiv.net/en/artworks/12345678',
+    'https://www.pixiv.net/ja/artworks/99999999',
+    'https://pixiv.net/artworks/12345678',
+  ])('returns true for Pixiv artwork page: %s', (url) => {
+    expect(isPixivArtworkPage(url)).toBe(true)
+  })
+
+  it.each([
+    'https://www.pixiv.net/artworks',
+    'https://www.pixiv.net/artworks/',
+    'https://www.pixiv.net/artworks/abc',
+    'https://www.pixiv.net/users/12345',
+    'https://www.pixiv.net/',
+    'https://example.com/artworks/12345678',
+    'https://www.pixiv.net/en/artworks/12345678/edit',
+  ])('returns false for non artwork page: %s', (url) => {
+    expect(isPixivArtworkPage(url)).toBe(false)
+  })
+})
+
 describe('upgradeTwitterImageUrl', () => {
   it('sets name=orig for Twitter media URLs', () => {
     expect(
@@ -274,6 +298,22 @@ describe('getFileName', () => {
         'https://img4.gelbooru.com//samples/15/65/sample_156599b000c99a786d987fa30ab25d27.jpg',
       ),
     ).toBe('sample_156599b000c99a786d987fa30ab25d27.jpg')
+  })
+
+  it('extracts filename from a Pixiv image URL', () => {
+    expect(
+      getFileName(
+        'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+      ),
+    ).toBe('12345678_p0_master1200.jpg')
+  })
+
+  it('extracts filename from a Pixiv original image URL', () => {
+    expect(
+      getFileName(
+        'https://i.pximg.net/img-original/img/2024/01/01/00/00/00/12345678_p0.png',
+      ),
+    ).toBe('12345678_p0.png')
   })
 })
 
@@ -462,6 +502,71 @@ describe('getImageSources', () => {
   it('skips Booru post page tabs when script injection fails', async () => {
     queryMock.mockResolvedValue([
       { id: 1, url: 'https://gelbooru.com/index.php?page=post&s=view&id=14357815' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockRejectedValue(new Error('injection failed'))
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(0)
+  })
+
+  it('extracts image URL from a Pixiv artwork page', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://www.pixiv.net/artworks/12345678' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      {
+        result: [
+          'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+        ],
+      },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe(
+      'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+    )
+    expect(result[0].tab.url).toBe('https://www.pixiv.net/artworks/12345678')
+  })
+
+  it('extracts multiple image URLs from a multi-page Pixiv artwork', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://www.pixiv.net/artworks/12345678' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      {
+        result: [
+          'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+          'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p1_master1200.jpg',
+        ],
+      },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(2)
+    expect(result[0].imageUrl).toBe(
+      'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+    )
+    expect(result[1].imageUrl).toBe(
+      'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p1_master1200.jpg',
+    )
+    expect(result[0].tab.url).toBe('https://www.pixiv.net/artworks/12345678')
+    expect(result[1].tab.url).toBe('https://www.pixiv.net/artworks/12345678')
+  })
+
+  it('skips Pixiv artwork page tabs when no image is found', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://www.pixiv.net/artworks/12345678' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([{ result: [] }])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(0)
+  })
+
+  it('skips Pixiv artwork page tabs when script injection fails', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://www.pixiv.net/artworks/12345678' },
     ] as chrome.tabs.Tab[])
     scriptMock.mockRejectedValue(new Error('injection failed'))
 

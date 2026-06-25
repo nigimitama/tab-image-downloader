@@ -5,6 +5,7 @@ import {
   upgradeTwitterImageUrl,
   isBooruPostPage,
   isGelbooruPostPage,
+  isPixivArtworkPage,
 } from "@/popup/imageUrl"
 
 export const setSyncData = (key: string, value: unknown) => {
@@ -60,16 +61,49 @@ export const extractBooruImageUrl = async (tabId: number): Promise<string | null
   return results?.[0]?.result ?? null
 }
 
-// Gelbooru's CDN (img*.gelbooru.com) rejects requests without a Referer from
-// *.gelbooru.com.  chrome.downloads.download() sends no Referer, so direct
-// downloads silently receive an HTML page instead of the image.
+// Pixiv artwork pages render images from i.pximg.net.  Multi-page works
+// lazy-load images, so DOM extraction alone misses pages below the fold.
+// Use Pixiv's AJAX API to reliably get all page URLs, with DOM fallback.
+export const extractPixivImageUrls = async (tabId: number): Promise<string[]> => {
+  const results = await chrome.scripting.executeScript({
+    target: { tabId },
+    world: "MAIN",
+    func: async () => {
+      const match = location.pathname.match(/\/artworks\/(\d+)/)
+      if (!match) return []
+      const id = match[1]
+      try {
+        const res = await fetch(`/ajax/illust/${id}/pages`)
+        const data = await res.json()
+        if (!data.error && Array.isArray(data.body)) {
+          return data.body.map((p: { urls: { regular: string } }) => p.urls.regular)
+        }
+      } catch { /* fall through to DOM extraction */ }
+      // Fallback: extract from visible <img> elements
+      const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pximg.net"]')
+      const urls: string[] = []
+      for (const img of imgs) {
+        const path = new URL(img.src).pathname
+        if (path.startsWith("/img-master/") || path.startsWith("/img-original/")) {
+          urls.push(img.src)
+        }
+      }
+      return urls
+    },
+  })
+  return results?.[0]?.result ?? []
+}
+
+// Some CDNs (Gelbooru's img*.gelbooru.com, Pixiv's i.pximg.net) reject requests
+// without a proper Referer header.  chrome.downloads.download() sends no
+// Referer, so direct downloads may silently fail.
 //
-// Workaround: create a hidden iframe on the Gelbooru page that loads the image
-// URL.  The iframe request carries the correct Referer (from gelbooru.com), so
-// the CDN serves the real image.  Once the iframe has loaded, we inject a
-// script into it that re-fetches the image (same-origin at img*.gelbooru.com)
-// and returns a data-URL that chrome.downloads.download() can use.
-export const fetchGelbooruImageAsDataUrl = async (
+// Workaround: create a hidden iframe on the source page that loads the image
+// URL.  The iframe request carries the correct Referer (from the parent page),
+// so the CDN serves the real image.  Once the iframe has loaded, we inject a
+// script into it that re-fetches the image (same-origin) and returns a
+// data-URL that chrome.downloads.download() can use.
+export const fetchImageAsDataUrl = async (
   tabId: number,
   imageUrl: string,
 ): Promise<string | null> => {
@@ -142,7 +176,7 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
       (tab): tab is chrome.tabs.Tab & { url: string; id: number } =>
         tab.url !== undefined && tab.id !== undefined,
     )
-    .map(async (tab): Promise<ImageSource | null> => {
+    .map(async (tab): Promise<ImageSource | ImageSource[] | null> => {
       if (isImageURL(tab.url)) {
         return { tab, imageUrl: tab.url }
       }
@@ -163,7 +197,7 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
           const imageUrl = await extractBooruImageUrl(tab.id)
           if (imageUrl) {
             if (isGelbooruPostPage(tab.url)) {
-              const downloadUrl = await fetchGelbooruImageAsDataUrl(tab.id, imageUrl)
+              const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
               if (downloadUrl) {
                 return { tab, imageUrl, downloadUrl }
               }
@@ -174,11 +208,26 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
           console.error(`Failed to extract image from tab ${tab.id}:`, e)
         }
       }
+      if (isPixivArtworkPage(tab.url)) {
+        try {
+          const imageUrls = await extractPixivImageUrls(tab.id)
+          if (imageUrls.length > 0) {
+            const sources: ImageSource[] = []
+            for (const imageUrl of imageUrls) {
+              const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
+              sources.push(downloadUrl ? { tab, imageUrl, downloadUrl } : { tab, imageUrl })
+            }
+            return sources
+          }
+        } catch (e) {
+          console.error(`Failed to extract image from tab ${tab.id}:`, e)
+        }
+      }
       return null
     })
 
   const results = await Promise.all(sourcePromises)
-  const sources = results.filter((s): s is ImageSource => s !== null)
+  const sources = results.flat().filter((s): s is ImageSource => s !== null)
   console.log(`${sources.length} image sources found.`)
   return sources
 }
