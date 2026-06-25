@@ -6,6 +6,7 @@ import { getImageSources, downloadFile, waitForDownloadComplete, getSyncData, ty
 import { Settings } from "@/background";
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload";
 import { DownloadDirSetting } from "./components/DownloadDirSetting";
+import { SiteParsingSetting } from "./components/SiteParsingSetting";
 import { ImageTabList } from "./components/ImageTabList";
 
 const downloadImages = async (
@@ -63,18 +64,28 @@ const App = () => {
   const [isClicked, setIsClicked] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  const loadImages = async (isSiteParsingEnabled: boolean) => {
+    const sources = await getImageSources({ isSiteParsingEnabled });
+    setImageSources(sources);
+    setSelectedIds(
+      new Set(
+        sources
+          .map((source) => source.tab.id)
+          .filter((id): id is number => id !== undefined),
+      ),
+    );
+  };
+
   useEffect(() => {
-    getImageSources().then((sources) => {
-      setImageSources(sources);
-      // Select every found image by default; the user can uncheck the ones to skip.
-      setSelectedIds(
-        new Set(
-          sources
-            .map((source) => source.tab.id)
-            .filter((id): id is number => id !== undefined),
-        ),
-      );
-    });
+    const load = async () => {
+      let isSiteParsingEnabled = true;
+      try {
+        const settings = await getSyncData<Settings>(["isSiteParsingEnabled"]);
+        isSiteParsingEnabled = settings.isSiteParsingEnabled ?? true;
+      } catch { /* use default */ }
+      await loadImages(isSiteParsingEnabled);
+    };
+    load();
   }, []);
 
   const toggleSelected = (id: number) => {
@@ -147,7 +158,10 @@ const App = () => {
           >
             Settings
           </Text>
-          <CloseTabAfterDownload />
+          <SiteParsingSetting onChange={(enabled) => loadImages(enabled)} />
+          <Box mt={1}>
+            <CloseTabAfterDownload />
+          </Box>
           <Box mt={2}>
             <DownloadDirSetting />
           </Box>

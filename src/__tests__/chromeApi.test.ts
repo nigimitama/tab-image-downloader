@@ -265,4 +265,18 @@ describe('getImageSources', () => {
       'https://pbs.twimg.com/media/xyz?format=png&name=orig',
     )
   })
+
+  it('skips site parsing when isSiteParsingEnabled is false', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://example.com/photo.png' },
+      { id: 2, url: 'https://x.com/user/status/123/photo/1' },
+      { id: 3, url: 'https://danbooru.donmai.us/posts/11655837' },
+      { id: 4, url: 'https://www.pixiv.net/artworks/12345678' },
+    ] as chrome.tabs.Tab[])
+
+    const result = await getImageSources({ isSiteParsingEnabled: false })
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe('https://example.com/photo.png')
+    expect(scriptMock).not.toHaveBeenCalled()
+  })
 })

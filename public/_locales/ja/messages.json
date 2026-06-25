@@ -3,6 +3,9 @@
     "message": "タブで開いた画像ファイルをまとめてダウンロードします",
     "description": "manifest.jsonのdescription用"
   },
+  "optionSiteParsingDesc": {
+    "message": "対応サイトから画像を取得する（X、Pixiv、Booruなど）"
+  },
   "optionTabCloseDesc": {
     "message": "画像をダウンロード後にタブを閉じる"
   },
