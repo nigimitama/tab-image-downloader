@@ -88,23 +88,44 @@ export const ImageTabList = ({
                   background: "#eee",
                 }}
               />
-              <a
-                href={source.tab.url}
-                target="_blank"
-                rel="noreferrer"
-                title={source.imageUrl}
-                style={{
-                  fontSize: "12px",
-                  color: "#3182ce",
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  textOverflow: "ellipsis",
-                  display: "block",
-                  minWidth: 0,
-                }}
-              >
-                {source.imageUrl}
-              </a>
+              <Box flex="1" minWidth={0} display="flex" flexDirection="column">
+                <a
+                  href={source.imageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={source.imageUrl}
+                  style={{
+                    fontSize: "12px",
+                    color: "#3182ce",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                    display: "block",
+                    minWidth: 0,
+                  }}
+                >
+                  {source.imageUrl}
+                </a>
+                {source.tab.url && source.tab.url !== source.imageUrl && (
+                  <a
+                    href={source.tab.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={source.tab.url}
+                    style={{
+                      fontSize: "11px",
+                      color: "#718096",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                      display: "block",
+                      minWidth: 0,
+                    }}
+                  >
+                    Open source page
+                  </a>
+                )}
+              </Box>
             </Box>
           );
         })}

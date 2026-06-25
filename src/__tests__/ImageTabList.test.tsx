@@ -63,15 +63,34 @@ describe('ImageTabList', () => {
     expect(img).toHaveAttribute('src', 'https://pbs.twimg.com/media/abc?format=jpg&name=orig')
   })
 
-  it('links to the tab URL for X photo pages', () => {
+  it('links the image-URL text to the image and adds a separate source-page link when the tab URL differs', () => {
     const sources = [
       makeSource(1, 'https://pbs.twimg.com/media/abc?format=jpg&name=orig', 'https://x.com/user/status/123/photo/1'),
     ]
 
     renderList(sources)
 
-    const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', 'https://x.com/user/status/123/photo/1')
+    const links = screen.getAllByRole('link')
+    expect(links).toHaveLength(2)
+    // Primary link: the visible image URL navigates to that same image, so the
+    // displayed text and the click destination match.
+    expect(links[0]).toHaveAttribute('href', 'https://pbs.twimg.com/media/abc?format=jpg&name=orig')
+    expect(links[0]).toHaveTextContent('https://pbs.twimg.com/media/abc?format=jpg&name=orig')
+    // Secondary link: an explicit "source page" link back to the originating tab.
+    expect(links[1]).toHaveAttribute('href', 'https://x.com/user/status/123/photo/1')
+    expect(links[1]).toHaveTextContent('Open source page')
+    expect(links[1]).toHaveAttribute('target', '_blank')
+    expect(links[1]).toHaveAttribute('rel', 'noreferrer')
+  })
+
+  it('does not render a source-page link when the tab URL equals the image URL', () => {
+    const sources = [makeSource(1, 'https://example.com/photo.png')]
+
+    renderList(sources)
+
+    const links = screen.getAllByRole('link')
+    expect(links).toHaveLength(1)
+    expect(links[0]).toHaveAttribute('href', 'https://example.com/photo.png')
   })
 
   it('opens links in a new tab', () => {
