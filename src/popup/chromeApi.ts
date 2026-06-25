@@ -168,7 +168,10 @@ export const fetchImageAsDataUrl = async (
   return dataUrl
 }
 
-export const getImageSources = async (): Promise<ImageSource[]> => {
+export const getImageSources = async (
+  options: { isSiteParsingEnabled?: boolean } = {},
+): Promise<ImageSource[]> => {
+  const { isSiteParsingEnabled = true } = options
   const tabs = await chrome.tabs.query({ currentWindow: true })
 
   const sourcePromises = tabs
@@ -180,6 +183,7 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
       if (isImageURL(tab.url)) {
         return { tab, imageUrl: tab.url }
       }
+      if (!isSiteParsingEnabled) return null
       if (isXPhotoPage(tab.url)) {
         try {
           const urls = await extractImageUrlsFromTab(tab.id)

@@ -6,6 +6,7 @@ import { getImageSources, downloadFile, waitForDownloadComplete, getSyncData, ty
 import { Settings } from "@/background";
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload";
 import { DownloadDirSetting } from "./components/DownloadDirSetting";
+import { SiteParsingSetting } from "./components/SiteParsingSetting";
 import { ImageTabList } from "./components/ImageTabList";
 
 const downloadImages = async (
@@ -64,9 +65,14 @@ const App = () => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    getImageSources().then((sources) => {
+    const load = async () => {
+      let isSiteParsingEnabled = true;
+      try {
+        const settings = await getSyncData<Settings>(["isSiteParsingEnabled"]);
+        isSiteParsingEnabled = settings.isSiteParsingEnabled ?? true;
+      } catch { /* use default */ }
+      const sources = await getImageSources({ isSiteParsingEnabled });
       setImageSources(sources);
-      // Select every found image by default; the user can uncheck the ones to skip.
       setSelectedIds(
         new Set(
           sources
@@ -74,7 +80,8 @@ const App = () => {
             .filter((id): id is number => id !== undefined),
         ),
       );
-    });
+    };
+    load();
   }, []);
 
   const toggleSelected = (id: number) => {
@@ -147,7 +154,10 @@ const App = () => {
           >
             Settings
           </Text>
-          <CloseTabAfterDownload />
+          <SiteParsingSetting />
+          <Box mt={1}>
+            <CloseTabAfterDownload />
+          </Box>
           <Box mt={2}>
             <DownloadDirSetting />
           </Box>

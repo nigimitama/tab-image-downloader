@@ -3,6 +3,9 @@
     "message": "Download image in all opened tabs by one click",
     "description": "for the description field in manifest.json"
   },
+  "optionSiteParsingDesc": {
+    "message": "Extract images from supported sites (X, Pixiv, Booru, etc.)"
+  },
   "optionTabCloseDesc": {
     "message": "Close the image tabs after downloading"
   },

@@ -1,11 +1,13 @@
 export type Settings = {
   isCloseTabAfterDownload: boolean;
   downloadDir: string | null;
+  isSiteParsingEnabled: boolean;
 };
 
 const defaultSettings: Settings = {
   isCloseTabAfterDownload: true,
   downloadDir: null, // if null, use default download directory
+  isSiteParsingEnabled: true,
 };
 
 chrome.runtime.onInstalled.addListener(() => {
