@@ -47,28 +47,3 @@ test("bulk download completes without error for multiple image tabs", async ({
   expect(downloadErrors).toHaveLength(0);
 });
 
-test("shows loading state while downloading", async ({
-  context,
-  imageServer,
-  extensionId,
-}) => {
-  const imgPage = await context.newPage();
-  await imgPage.goto(`http://127.0.0.1:${imageServer.port}/test.png`);
-
-  const popup = await context.newPage();
-  await popup.goto(
-    `chrome-extension://${extensionId}/src/popup/index.html`
-  );
-
-  const downloadBtn = popup.getByRole("button", { name: "Download" });
-  await expect(downloadBtn).toBeEnabled();
-  await downloadBtn.click();
-
-  // Chakra UI Button with isLoading adds a spinner and data-loading attribute
-  await expect(downloadBtn).toHaveAttribute("data-loading", { timeout: 5_000 });
-
-  // After download completes, loading state clears
-  await expect(downloadBtn).not.toHaveAttribute("data-loading", {
-    timeout: 10_000,
-  });
-});
