@@ -13,7 +13,8 @@ const extractionScript = `
     const imgs = document.querySelectorAll('img[src*="i.pximg.net"]');
     const urls = [];
     for (const img of imgs) {
-      if (img.src.includes('/img-master/') || img.src.includes('/img-original/')) {
+      const path = new URL(img.src).pathname;
+      if (path.startsWith('/img-master/') || path.startsWith('/img-original/')) {
         urls.push(img.src);
       }
     }

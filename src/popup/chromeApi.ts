@@ -72,11 +72,13 @@ export const extractPixivImageUrls = async (tabId: number): Promise<string[]> =>
       if (originalLinks.length > 0) {
         return Array.from(originalLinks).map((a) => a.href)
       }
-      // Fall back to displayed master/regular images
+      // Fall back to displayed master/regular images.
+      // Exclude thumbnails whose path contains a resize prefix like /c/250x250_80_a2/
       const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pximg.net"]')
       const urls: string[] = []
       for (const img of imgs) {
-        if (img.src.includes("/img-master/") || img.src.includes("/img-original/")) {
+        const path = new URL(img.src).pathname
+        if (path.startsWith("/img-master/") || path.startsWith("/img-original/")) {
           urls.push(img.src)
         }
       }
