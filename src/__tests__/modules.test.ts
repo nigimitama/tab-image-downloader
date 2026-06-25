@@ -277,7 +277,7 @@ describe('getFileName', () => {
   it('extracts filename from a Pixiv image URL', () => {
     expect(
       getFileName(
-        'https://i.pimg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+        'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
       ),
     ).toBe('12345678_p0_master1200.jpg')
   })
@@ -285,7 +285,7 @@ describe('getFileName', () => {
   it('extracts filename from a Pixiv original image URL', () => {
     expect(
       getFileName(
-        'https://i.pimg.net/img-original/img/2024/01/01/00/00/00/12345678_p0.png',
+        'https://i.pximg.net/img-original/img/2024/01/01/00/00/00/12345678_p0.png',
       ),
     ).toBe('12345678_p0.png')
   })
@@ -468,24 +468,50 @@ describe('getImageSources', () => {
     ] as chrome.tabs.Tab[])
     scriptMock.mockResolvedValue([
       {
-        result:
-          'https://i.pimg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+        result: [
+          'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+        ],
       },
     ])
 
     const result = await getImageSources()
     expect(result).toHaveLength(1)
     expect(result[0].imageUrl).toBe(
-      'https://i.pimg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+      'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
     )
     expect(result[0].tab.url).toBe('https://www.pixiv.net/artworks/12345678')
+  })
+
+  it('extracts multiple image URLs from a multi-page Pixiv artwork', async () => {
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://www.pixiv.net/artworks/12345678' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      {
+        result: [
+          'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+          'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p1_master1200.jpg',
+        ],
+      },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(2)
+    expect(result[0].imageUrl).toBe(
+      'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p0_master1200.jpg',
+    )
+    expect(result[1].imageUrl).toBe(
+      'https://i.pximg.net/img-master/img/2024/01/01/00/00/00/12345678_p1_master1200.jpg',
+    )
+    expect(result[0].tab.url).toBe('https://www.pixiv.net/artworks/12345678')
+    expect(result[1].tab.url).toBe('https://www.pixiv.net/artworks/12345678')
   })
 
   it('skips Pixiv artwork page tabs when no image is found', async () => {
     queryMock.mockResolvedValue([
       { id: 1, url: 'https://www.pixiv.net/artworks/12345678' },
     ] as chrome.tabs.Tab[])
-    scriptMock.mockResolvedValue([{ result: null }])
+    scriptMock.mockResolvedValue([{ result: [] }])
 
     const result = await getImageSources()
     expect(result).toHaveLength(0)

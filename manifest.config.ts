@@ -24,7 +24,7 @@ export default defineManifest({
     "https://gelbooru.com/*",
     "https://*.gelbooru.com/*",
     "https://www.pixiv.net/*",
-    "https://*.pimg.net/*",
+    "https://*.pximg.net/*",
   ],
   background: {
     service_worker: "src/background.ts",
