@@ -13,7 +13,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
   // Gelbooru's CDN rejects requests without a Referer from gelbooru.com
   // (hotlink protection). Add the header so chrome.downloads.download works.
-  // Pixiv's CDN (i.pimg.net) similarly requires a Referer from pixiv.net.
+  // Pixiv's CDN (i.pximg.net) similarly requires a Referer from pixiv.net.
   chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [1, 2],
     addRules: [
@@ -52,7 +52,7 @@ chrome.runtime.onInstalled.addListener(() => {
           ],
         },
         condition: {
-          requestDomains: ["pimg.net"],
+          requestDomains: ["pximg.net"],
           resourceTypes: [
             chrome.declarativeNetRequest.ResourceType.IMAGE,
             chrome.declarativeNetRequest.ResourceType.OTHER,

@@ -61,31 +61,32 @@ export const extractBooruImageUrl = async (tabId: number): Promise<string | null
   return results?.[0]?.result ?? null
 }
 
-// Pixiv artwork pages render images from i.pimg.net. Extract the main
-// artwork image URL from the DOM.
-export const extractPixivImageUrl = async (tabId: number): Promise<string | null> => {
+// Pixiv artwork pages render images from i.pximg.net. Extract all artwork
+// image URLs from the DOM (a multi-page work shows all pages on one page).
+export const extractPixivImageUrls = async (tabId: number): Promise<string[]> => {
   const results = await chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
       // Prefer links to original-quality images
-      const originalLinks = document.querySelectorAll<HTMLAnchorElement>('a[href*="i.pimg.net/img-original/"]')
+      const originalLinks = document.querySelectorAll<HTMLAnchorElement>('a[href*="i.pximg.net/img-original/"]')
       if (originalLinks.length > 0) {
-        return originalLinks[0].href
+        return Array.from(originalLinks).map((a) => a.href)
       }
       // Fall back to displayed master/regular images
-      const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pimg.net"]')
+      const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pximg.net"]')
+      const urls: string[] = []
       for (const img of imgs) {
         if (img.src.includes("/img-master/") || img.src.includes("/img-original/")) {
-          return img.src
+          urls.push(img.src)
         }
       }
-      return null
+      return urls
     },
   })
-  return results?.[0]?.result ?? null
+  return results?.[0]?.result ?? []
 }
 
-// Some CDNs (Gelbooru's img*.gelbooru.com, Pixiv's i.pimg.net) reject requests
+// Some CDNs (Gelbooru's img*.gelbooru.com, Pixiv's i.pximg.net) reject requests
 // without a proper Referer header.  chrome.downloads.download() sends no
 // Referer, so direct downloads may silently fail.
 //
@@ -167,7 +168,7 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
       (tab): tab is chrome.tabs.Tab & { url: string; id: number } =>
         tab.url !== undefined && tab.id !== undefined,
     )
-    .map(async (tab): Promise<ImageSource | null> => {
+    .map(async (tab): Promise<ImageSource | ImageSource[] | null> => {
       if (isImageURL(tab.url)) {
         return { tab, imageUrl: tab.url }
       }
@@ -201,13 +202,14 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
       }
       if (isPixivArtworkPage(tab.url)) {
         try {
-          const imageUrl = await extractPixivImageUrl(tab.id)
-          if (imageUrl) {
-            const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
-            if (downloadUrl) {
-              return { tab, imageUrl, downloadUrl }
+          const imageUrls = await extractPixivImageUrls(tab.id)
+          if (imageUrls.length > 0) {
+            const sources: ImageSource[] = []
+            for (const imageUrl of imageUrls) {
+              const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
+              sources.push(downloadUrl ? { tab, imageUrl, downloadUrl } : { tab, imageUrl })
             }
-            return { tab, imageUrl }
+            return sources
           }
         } catch (e) {
           console.error(`Failed to extract image from tab ${tab.id}:`, e)
@@ -217,7 +219,7 @@ export const getImageSources = async (): Promise<ImageSource[]> => {
     })
 
   const results = await Promise.all(sourcePromises)
-  const sources = results.filter((s): s is ImageSource => s !== null)
+  const sources = results.flat().filter((s): s is ImageSource => s !== null)
   console.log(`${sources.length} image sources found.`)
   return sources
 }
