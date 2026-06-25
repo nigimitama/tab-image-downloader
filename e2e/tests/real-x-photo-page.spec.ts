@@ -1,61 +1,72 @@
 import { test, expect } from "../fixtures";
 
-// These tests verify the full popup integration for x.com photo pages:
-// extraction of pbs.twimg.com image URLs from the page DOM and popup detection.
+// These tests verify that pbs.twimg.com images (used by X/Twitter) are actually
+// downloadable by the browser — not just that the URL is extracted, but that
+// the downloaded content is a real image.
 //
-// We cannot navigate to real x.com pages in CI (login wall) and individual
-// pbs.twimg.com media URLs can disappear, so we use local mock pages that
-// mirror the DOM structure of a real X photo page.
+// We cannot navigate to real x.com pages in CI because x.com requires login
+// for headless browsers.  Instead we serve a local page that embeds a real
+// pbs.twimg.com image URL and verify the full popup → download flow against it.
 //
+// They require network access and hit live pbs.twimg.com servers.
 // Run only this file: npx playwright test e2e/tests/real-x-photo-page.spec.ts
 
-test.describe("x.com photo page popup integration", () => {
-  test("popup detects x-photo-page tab via extraction script", async ({
+// Real pbs.twimg.com media URL from:
+// https://x.com/mitama64/status/1799680081184620622/photo/2
+const REAL_TWIMG_URL =
+  "https://pbs.twimg.com/media/GPm--3abMAAmfFQ?format=jpg&name=medium";
+
+test.describe("x.com real image download", () => {
+  test("pbs.twimg.com image is directly accessible", async ({ context }) => {
+    const page = await context.newPage();
+    const response = await page.goto(REAL_TWIMG_URL, {
+      waitUntil: "load",
+      timeout: 30_000,
+    });
+
+    expect(response).not.toBeNull();
+    expect(response!.status()).toBe(200);
+    const contentType = response!.headers()["content-type"] ?? "";
+    expect(contentType).toContain("image");
+  });
+
+  test("extraction script finds real pbs.twimg.com image in mock page", async ({
     context,
     imageServer,
   }) => {
-    // The mock page has <img src="pbs.twimg.com/media/..."> elements that
-    // mirror a real X photo page DOM.  The extension's isXPhotoPage() check
-    // requires an x.com URL pattern, but the extraction script itself runs
-    // on any page with pbs.twimg.com images — so we test the script directly.
+    // Local page embedding the real pbs.twimg.com URL — mirrors x.com DOM
     const page = await context.newPage();
     await page.goto(
-      `http://127.0.0.1:${imageServer.port}/x-photo-page.html`
+      `http://127.0.0.1:${imageServer.port}/x-photo-page-real.html`
     );
 
-    const extractionScript = `
+    // Wait for the real image to load from pbs.twimg.com
+    await page.waitForSelector('img[src*="pbs.twimg.com/media/"]', {
+      timeout: 15_000,
+    });
+
+    const urls: string[] = await page.evaluate(`
       (() => {
         const imgs = document.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
         return [...new Set(Array.from(imgs).map(img => img.src))];
       })()
-    `;
+    `);
 
-    const urls: string[] = await page.evaluate(extractionScript);
-
-    expect(urls).toHaveLength(2);
-    expect(urls[0]).toContain("pbs.twimg.com/media/TestImageABC");
-    expect(urls[1]).toContain("pbs.twimg.com/media/TestImageDEF");
-
-    // Verify upgradeTwitterImageUrl logic: name param should become "orig"
-    for (const url of urls) {
-      const u = new URL(url);
-      expect(u.host).toBe("pbs.twimg.com");
-      expect(u.pathname).toMatch(/^\/media\//);
-      expect(u.searchParams.has("format")).toBe(true);
-    }
+    expect(urls).toHaveLength(1);
+    expect(urls[0]).toContain("pbs.twimg.com/media/GPm--3abMAAmfFQ");
   });
 
-  test("popup detects local image tab and completes download flow", async ({
+  test("popup detects and downloads real pbs.twimg.com image", async ({
     context,
     extensionId,
-    imageServer,
   }) => {
-    // Open a local image file — the extension detects this as an image tab
-    // via isImageURL (file extension check).
+    // Open a tab with the direct pbs.twimg.com image URL — the extension
+    // recognizes this as a Twitter image tab via isTwitterImage().
     const imgPage = await context.newPage();
-    await imgPage.goto(
-      `http://127.0.0.1:${imageServer.port}/test.png`
-    );
+    await imgPage.goto(REAL_TWIMG_URL, {
+      waitUntil: "load",
+      timeout: 30_000,
+    });
 
     const popup = await context.newPage();
     await popup.goto(
@@ -63,7 +74,7 @@ test.describe("x.com photo page popup integration", () => {
     );
 
     await expect(popup.getByText("1 image tabs found.")).toBeVisible({
-      timeout: 10_000,
+      timeout: 30_000,
     });
 
     const consoleErrors: string[] = [];
@@ -88,5 +99,26 @@ test.describe("x.com photo page popup integration", () => {
       e.toLowerCase().includes("download")
     );
     expect(downloadErrors).toHaveLength(0);
+
+    // Verify the last completed download is an actual image
+    const downloadInfo = await popup.evaluate(async () => {
+      const items = await new Promise<chrome.downloads.DownloadItem[]>(
+        (resolve) =>
+          chrome.downloads.search(
+            { orderBy: ["-startTime"], limit: 1 },
+            resolve
+          )
+      );
+      const item = items[0];
+      return item
+        ? { state: item.state, mime: item.mime, totalBytes: item.totalBytes }
+        : null;
+    });
+
+    console.log("Download info:", downloadInfo);
+    expect(downloadInfo).not.toBeNull();
+    expect(downloadInfo!.state).toBe("complete");
+    expect(downloadInfo!.mime).toContain("image");
+    expect(downloadInfo!.totalBytes).toBeGreaterThan(1000);
   });
 });
