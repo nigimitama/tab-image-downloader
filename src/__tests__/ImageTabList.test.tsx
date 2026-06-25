@@ -63,7 +63,7 @@ describe('ImageTabList', () => {
     expect(img).toHaveAttribute('src', 'https://pbs.twimg.com/media/abc?format=jpg&name=orig')
   })
 
-  it('links to the tab URL for X photo pages', () => {
+  it('links to the image URL even when the tab URL differs (e.g. X photo pages)', () => {
     const sources = [
       makeSource(1, 'https://pbs.twimg.com/media/abc?format=jpg&name=orig', 'https://x.com/user/status/123/photo/1'),
     ]
@@ -71,7 +71,9 @@ describe('ImageTabList', () => {
     renderList(sources)
 
     const link = screen.getByRole('link')
-    expect(link).toHaveAttribute('href', 'https://x.com/user/status/123/photo/1')
+    // The link text shows the image URL, so clicking it must navigate to that
+    // same image URL, not the source page URL.
+    expect(link).toHaveAttribute('href', 'https://pbs.twimg.com/media/abc?format=jpg&name=orig')
   })
 
   it('opens links in a new tab', () => {

@@ -89,7 +89,7 @@ export const ImageTabList = ({
                 }}
               />
               <a
-                href={source.tab.url}
+                href={source.imageUrl}
                 target="_blank"
                 rel="noreferrer"
                 title={source.imageUrl}
