@@ -23,6 +23,8 @@ export default defineManifest({
     "https://*.donmai.us/*",
     "https://gelbooru.com/*",
     "https://*.gelbooru.com/*",
+    "https://yande.re/*",
+    "https://files.yande.re/*",
   ],
   background: {
     service_worker: "src/background.ts",
