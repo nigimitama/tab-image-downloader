@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button, Text, ChakraProvider, Divider, Box } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
-import { getFileName, sleep } from "./imageUrl";
-import { getImageSources, downloadFile, getSyncData, type ImageSource } from "./chromeApi";
+import { getFileName } from "./imageUrl";
+import { getImageSources, downloadFile, waitForDownloadComplete, getSyncData, type ImageSource } from "./chromeApi";
 import { Settings } from "@/background";
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload";
 import { DownloadDirSetting } from "./components/DownloadDirSetting";
@@ -31,9 +31,7 @@ const downloadImages = async (
         const downloadId = await downloadFile(source.downloadUrl ?? source.imageUrl, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
         if (doClose) {
-          // chrome.downloads.download resolves when the download starts, not completes.
-          // Wait briefly so the browser registers the download before the tab is closed.
-          await sleep(0.5);
+          await waitForDownloadComplete(downloadId);
           chrome.tabs.remove(tabId, () =>
             console.log(`Tab closed: ${source.tab.url}`),
           );
