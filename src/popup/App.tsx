@@ -64,6 +64,18 @@ const App = () => {
   const [isClicked, setIsClicked] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  const loadImages = async (isSiteParsingEnabled: boolean) => {
+    const sources = await getImageSources({ isSiteParsingEnabled });
+    setImageSources(sources);
+    setSelectedIds(
+      new Set(
+        sources
+          .map((source) => source.tab.id)
+          .filter((id): id is number => id !== undefined),
+      ),
+    );
+  };
+
   useEffect(() => {
     const load = async () => {
       let isSiteParsingEnabled = true;
@@ -71,15 +83,7 @@ const App = () => {
         const settings = await getSyncData<Settings>(["isSiteParsingEnabled"]);
         isSiteParsingEnabled = settings.isSiteParsingEnabled ?? true;
       } catch { /* use default */ }
-      const sources = await getImageSources({ isSiteParsingEnabled });
-      setImageSources(sources);
-      setSelectedIds(
-        new Set(
-          sources
-            .map((source) => source.tab.id)
-            .filter((id): id is number => id !== undefined),
-        ),
-      );
+      await loadImages(isSiteParsingEnabled);
     };
     load();
   }, []);
@@ -154,7 +158,7 @@ const App = () => {
           >
             Settings
           </Text>
-          <SiteParsingSetting />
+          <SiteParsingSetting onChange={(enabled) => loadImages(enabled)} />
           <Box mt={1}>
             <CloseTabAfterDownload />
           </Box>

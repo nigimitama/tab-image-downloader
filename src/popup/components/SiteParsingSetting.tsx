@@ -3,7 +3,11 @@ import { Checkbox, Text } from "@chakra-ui/react";
 import { setSyncData } from "@/popup/chromeApi";
 import { Settings } from "@/background";
 
-export const SiteParsingSetting = () => {
+export const SiteParsingSetting = ({
+  onChange,
+}: {
+  onChange?: (enabled: boolean) => void;
+}) => {
   const [isChecked, setIsChecked] = useState(true);
 
   useEffect(() => {
@@ -16,6 +20,7 @@ export const SiteParsingSetting = () => {
   const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsChecked(event.target.checked);
     setSyncData("isSiteParsingEnabled", event.target.checked);
+    onChange?.(event.target.checked);
   };
 
   return (
