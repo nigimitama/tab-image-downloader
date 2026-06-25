@@ -240,3 +240,21 @@ export const downloadFile = (url: string, filename: string): Promise<number> => 
   })
   return downloading
 }
+
+export const waitForDownloadComplete = (downloadId: number): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const listener = (delta: chrome.downloads.DownloadDelta) => {
+      if (delta.id !== downloadId) return
+      if (!delta.state) return
+
+      if (delta.state.current === "complete") {
+        chrome.downloads.onChanged.removeListener(listener)
+        resolve()
+      } else if (delta.state.current === "interrupted") {
+        chrome.downloads.onChanged.removeListener(listener)
+        reject(new Error(`Download interrupted: ${delta.id}`))
+      }
+    }
+    chrome.downloads.onChanged.addListener(listener)
+  })
+}
