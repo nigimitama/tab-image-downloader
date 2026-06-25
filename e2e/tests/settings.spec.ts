@@ -11,7 +11,7 @@ test("closes image tab after download when setting is enabled", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
   // Wait for the checkbox state to load from storage (default is true/checked)
-  const checkbox = settingsPage.getByRole("checkbox");
+  const checkbox = settingsPage.getByRole("checkbox", { name: /Close the image tabs after/ });
   await expect(checkbox).toBeChecked({ timeout: 5_000 });
   await settingsPage.close();
 
@@ -54,7 +54,7 @@ test("keeps image tab open after download when setting is disabled", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
   // Wait for storage-loaded state before interacting
-  const checkbox = settingsPage.getByRole("checkbox");
+  const checkbox = settingsPage.getByRole("checkbox", { name: /Close the image tabs after/ });
   await expect(checkbox).toBeChecked({ timeout: 5_000 });
   // Chakra UI checkbox overlay intercepts pointer events; use force click
   await checkbox.uncheck({ force: true });
@@ -126,7 +126,7 @@ test("persists settings across popup reopens", async ({
   );
 
   // Ensure checkbox is checked before toggling — earlier tests may have changed it
-  const checkbox = popup1.getByRole("checkbox");
+  const checkbox = popup1.getByRole("checkbox", { name: /Close the image tabs after/ });
   await expect(checkbox).toBeAttached({ timeout: 5_000 });
   if (!(await checkbox.isChecked())) {
     await checkbox.check({ force: true });
@@ -149,7 +149,7 @@ test("persists settings across popup reopens", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
 
-  const checkbox2 = popup2.getByRole("checkbox");
+  const checkbox2 = popup2.getByRole("checkbox", { name: /Close the image tabs after/ });
   await expect(checkbox2).not.toBeChecked({ timeout: 5_000 });
   const dirInput2 = popup2.getByPlaceholder("Subdirectory (optional)");
   await expect(dirInput2).toHaveValue("my-folder");

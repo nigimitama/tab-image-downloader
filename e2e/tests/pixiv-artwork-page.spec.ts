@@ -34,8 +34,8 @@ test.describe("Pixiv single-image artwork", () => {
   test("extracts the artwork image URL", async ({ context }) => {
     const page = await context.newPage();
     await page.goto(ARTWORK_URL, {
-      waitUntil: "networkidle",
-      timeout: 30_000,
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
     });
 
     const urls: string[] = await page.evaluate(extractionScript);
@@ -50,11 +50,12 @@ test.describe("Pixiv single-image artwork", () => {
 test.describe("Pixiv multi-image artwork", () => {
   const ARTWORK_URL = "https://www.pixiv.net/artworks/134386572";
 
-  test("extracts all page image URLs", async ({ context }) => {
+  test("extracts all page image URLs", async ({ context }, testInfo) => {
+    testInfo.setTimeout(60_000);
     const page = await context.newPage();
     await page.goto(ARTWORK_URL, {
-      waitUntil: "networkidle",
-      timeout: 30_000,
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
     });
 
     const urls: string[] = await page.evaluate(extractionScript);
