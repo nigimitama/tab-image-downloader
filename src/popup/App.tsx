@@ -21,6 +21,15 @@ const downloadImages = async (
     const doClose = storage.isCloseTabAfterDownload;
     const downloadDir = storage.downloadDir;
 
+    const tabDownloadCounts = new Map<number, { total: number; succeeded: number }>();
+    for (const source of sources) {
+      const tabId = source.tab.id;
+      if (tabId === undefined) continue;
+      const entry = tabDownloadCounts.get(tabId) ?? { total: 0, succeeded: 0 };
+      entry.total++;
+      tabDownloadCounts.set(tabId, entry);
+    }
+
     for (const source of sources) {
       const tabId = source.tab.id;
       if (tabId === undefined) continue;
@@ -30,14 +39,18 @@ const downloadImages = async (
       try {
         const downloadId = await downloadFile(source.downloadUrl ?? source.imageUrl, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
-        if (doClose) {
-          await waitForDownloadComplete(downloadId);
-          chrome.tabs.remove(tabId, () =>
-            console.log(`Tab closed: ${source.tab.url}`),
-          );
-        }
+        await waitForDownloadComplete(downloadId);
+        tabDownloadCounts.get(tabId)!.succeeded++;
       } catch (error) {
         console.error(`Download failed: ${error} | savePath=${savePath}, URL=${source.imageUrl}`);
+      }
+    }
+
+    if (doClose) {
+      for (const [tabId, counts] of tabDownloadCounts) {
+        if (counts.succeeded === counts.total) {
+          chrome.tabs.remove(tabId, () => console.log(`Tab closed: ${tabId}`));
+        }
       }
     }
   } finally {
