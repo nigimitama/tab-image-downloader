@@ -1,11 +1,14 @@
-import { Box, Checkbox, Flex, Text } from "@chakra-ui/react";
-import type { ImageSource } from "@/popup/chromeApi";
+import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react";
+import { WarningIcon } from "@chakra-ui/icons";
+import { getSourceKey, type DownloadStatus, type ImageSource } from "@/popup/chromeApi";
 
 type Props = {
   sources: ImageSource[];
   selectedIds: Set<number>;
   onToggle: (id: number) => void;
   onToggleAll: () => void;
+  downloadStatuses: Map<string, DownloadStatus>;
+  isDownloading: boolean;
 };
 
 export const ImageTabList = ({
@@ -13,6 +16,8 @@ export const ImageTabList = ({
   selectedIds,
   onToggle,
   onToggleAll,
+  downloadStatuses,
+  isDownloading,
 }: Props) => {
   if (sources.length === 0) return null;
 
@@ -46,6 +51,7 @@ export const ImageTabList = ({
           isChecked={allSelected}
           isIndeterminate={someSelected && !allSelected}
           onChange={onToggleAll}
+          isDisabled={isDownloading}
         >
           <Text fontSize="xs">Select all</Text>
         </Checkbox>
@@ -58,6 +64,10 @@ export const ImageTabList = ({
         {sources.map((source, index) => {
           const id = source.tab.id;
           const isChecked = id !== undefined && selectedIds.has(id);
+          const status = downloadStatuses.get(getSourceKey(source));
+          const isFailed = status === 'failed';
+          const isDownloadingThis = status === 'downloading';
+
           return (
             <Box
               key={`${id}-${index}`}
@@ -67,11 +77,12 @@ export const ImageTabList = ({
               px={2}
               py={1}
               _notLast={{ borderBottomWidth: "1px", borderColor: "gray.100" }}
+              bg={isFailed ? "red.50" : undefined}
             >
               <Checkbox
                 size="sm"
                 isChecked={isChecked}
-                isDisabled={id === undefined}
+                isDisabled={id === undefined || isDownloading}
                 onChange={() => id !== undefined && onToggle(id)}
                 aria-label={`Toggle ${source.imageUrl}`}
                 flexShrink={0}
@@ -96,7 +107,7 @@ export const ImageTabList = ({
                   title={source.imageUrl}
                   style={{
                     fontSize: "12px",
-                    color: "#3182ce",
+                    color: isFailed ? "#E53E3E" : "#3182ce",
                     overflow: "hidden",
                     whiteSpace: "nowrap",
                     textOverflow: "ellipsis",
@@ -106,7 +117,15 @@ export const ImageTabList = ({
                 >
                   {source.imageUrl}
                 </a>
-                {source.tab.url && source.tab.url !== source.imageUrl && (
+                {isFailed && (
+                  <Text fontSize="11px" color="red.500" display="flex" alignItems="center" gap="4px">
+                    <WarningIcon boxSize="10px" />
+                    {chrome.i18n === undefined
+                      ? "Download failed"
+                      : chrome.i18n.getMessage("downloadFailed")}
+                  </Text>
+                )}
+                {!isFailed && source.tab.url && source.tab.url !== source.imageUrl && (
                   <a
                     href={source.tab.url}
                     target="_blank"
@@ -126,6 +145,9 @@ export const ImageTabList = ({
                   </a>
                 )}
               </Box>
+              {isDownloadingThis && (
+                <Spinner size="sm" color="blue.500" flexShrink={0} />
+              )}
             </Box>
           );
         })}
