@@ -21,6 +21,8 @@ const downloadImages = async (
     const doClose = storage.isCloseTabAfterDownload;
     const downloadDir = storage.downloadDir;
 
+    const tabsToClose = new Set<number>();
+
     for (const source of sources) {
       const tabId = source.tab.id;
       if (tabId === undefined) continue;
@@ -30,15 +32,17 @@ const downloadImages = async (
       try {
         const downloadId = await downloadFile(source.downloadUrl ?? source.imageUrl, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
+        await waitForDownloadComplete(downloadId);
         if (doClose) {
-          await waitForDownloadComplete(downloadId);
-          chrome.tabs.remove(tabId, () =>
-            console.log(`Tab closed: ${source.tab.url}`),
-          );
+          tabsToClose.add(tabId);
         }
       } catch (error) {
         console.error(`Download failed: ${error} | savePath=${savePath}, URL=${source.imageUrl}`);
       }
+    }
+
+    for (const tabId of tabsToClose) {
+      chrome.tabs.remove(tabId, () => console.log(`Tab closed: ${tabId}`));
     }
   } finally {
     setIsClicked(false);

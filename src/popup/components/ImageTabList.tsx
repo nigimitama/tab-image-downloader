@@ -55,12 +55,12 @@ export const ImageTabList = ({
       </Flex>
 
       <Box maxHeight="240px" overflowY="auto">
-        {sources.map((source) => {
+        {sources.map((source, index) => {
           const id = source.tab.id;
           const isChecked = id !== undefined && selectedIds.has(id);
           return (
             <Box
-              key={id}
+              key={`${id}-${index}`}
               display="flex"
               alignItems="center"
               gap={2}
