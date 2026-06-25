@@ -5,8 +5,10 @@ import { Settings } from "@/background";
 
 export const SiteParsingSetting = ({
   onChange,
+  isDisabled = false,
 }: {
   onChange?: (enabled: boolean) => void;
+  isDisabled?: boolean;
 }) => {
   const [isChecked, setIsChecked] = useState(true);
 
@@ -24,7 +26,7 @@ export const SiteParsingSetting = ({
   };
 
   return (
-    <Checkbox size="sm" isChecked={isChecked} onChange={handleCheck}>
+    <Checkbox size="sm" isChecked={isChecked} isDisabled={isDisabled} onChange={handleCheck}>
       <Text fontSize="sm">
         {chrome.i18n === undefined
           ? "optionSiteParsingDesc"

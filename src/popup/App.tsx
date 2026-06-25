@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Text, ChakraProvider, Divider, Box } from "@chakra-ui/react";
+import { Button, Text, ChakraProvider, Divider, Box, Spinner, Flex } from "@chakra-ui/react";
 import { DownloadIcon } from "@chakra-ui/icons";
 import { getFileName } from "./imageUrl";
 import { getImageSources, downloadFile, waitForDownloadComplete, getSyncData, type ImageSource } from "./chromeApi";
@@ -62,18 +62,24 @@ const downloadImages = async (
 const App = () => {
   const [imageSources, setImageSources] = useState<ImageSource[] | null>(null);
   const [isClicked, setIsClicked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const loadImages = async (isSiteParsingEnabled: boolean) => {
-    const sources = await getImageSources({ isSiteParsingEnabled });
-    setImageSources(sources);
-    setSelectedIds(
-      new Set(
-        sources
-          .map((source) => source.tab.id)
-          .filter((id): id is number => id !== undefined),
-      ),
-    );
+    setIsLoading(true);
+    try {
+      const sources = await getImageSources({ isSiteParsingEnabled });
+      setImageSources(sources);
+      setSelectedIds(
+        new Set(
+          sources
+            .map((source) => source.tab.id)
+            .filter((id): id is number => id !== undefined),
+        ),
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -117,13 +123,20 @@ const App = () => {
   return (
     <ChakraProvider>
       <div style={{ margin: "10px", width: "500px" }}>
-        <Text fontSize="md">
-          {imageSources !== null
-            ? (chrome.i18n === undefined
-              ? `${imageSources.length} image tabs found.`
-              : chrome.i18n.getMessage("imageTabsFound", [String(imageSources.length)]))
-            : ""}
-        </Text>
+        {isLoading ? (
+          <Flex align="center" gap={2}>
+            <Spinner size="sm" color="blue.500" />
+            <Text fontSize="md">Checking tabs...</Text>
+          </Flex>
+        ) : (
+          <Text fontSize="md">
+            {imageSources !== null
+              ? (chrome.i18n === undefined
+                ? `${imageSources.length} image tabs found.`
+                : chrome.i18n.getMessage("imageTabsFound", [String(imageSources.length)]))
+              : ""}
+          </Text>
+        )}
 
         <ImageTabList
           sources={imageSources ?? []}
@@ -158,7 +171,7 @@ const App = () => {
           >
             Settings
           </Text>
-          <SiteParsingSetting onChange={(enabled) => loadImages(enabled)} />
+          <SiteParsingSetting onChange={(enabled) => loadImages(enabled)} isDisabled={isLoading} />
           <Box mt={1}>
             <CloseTabAfterDownload />
           </Box>
