@@ -61,19 +61,25 @@ export const extractBooruImageUrl = async (tabId: number): Promise<string | null
   return results?.[0]?.result ?? null
 }
 
-// Pixiv artwork pages render images from i.pximg.net. Extract all artwork
-// image URLs from the DOM (a multi-page work shows all pages on one page).
+// Pixiv artwork pages render images from i.pximg.net.  Multi-page works
+// lazy-load images, so DOM extraction alone misses pages below the fold.
+// Use Pixiv's AJAX API to reliably get all page URLs, with DOM fallback.
 export const extractPixivImageUrls = async (tabId: number): Promise<string[]> => {
   const results = await chrome.scripting.executeScript({
     target: { tabId },
-    func: () => {
-      // Prefer links to original-quality images
-      const originalLinks = document.querySelectorAll<HTMLAnchorElement>('a[href*="i.pximg.net/img-original/"]')
-      if (originalLinks.length > 0) {
-        return Array.from(originalLinks).map((a) => a.href)
-      }
-      // Fall back to displayed master/regular images.
-      // Exclude thumbnails whose path contains a resize prefix like /c/250x250_80_a2/
+    world: "MAIN",
+    func: async () => {
+      const match = location.pathname.match(/\/artworks\/(\d+)/)
+      if (!match) return []
+      const id = match[1]
+      try {
+        const res = await fetch(`/ajax/illust/${id}/pages`)
+        const data = await res.json()
+        if (!data.error && Array.isArray(data.body)) {
+          return data.body.map((p: { urls: { regular: string } }) => p.urls.regular)
+        }
+      } catch { /* fall through to DOM extraction */ }
+      // Fallback: extract from visible <img> elements
       const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pximg.net"]')
       const urls: string[] = []
       for (const img of imgs) {

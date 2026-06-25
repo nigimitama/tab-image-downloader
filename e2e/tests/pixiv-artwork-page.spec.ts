@@ -5,11 +5,17 @@ import { test, expect } from "../fixtures";
 // Run only this file: npx playwright test e2e/tests/pixiv-artwork-page.spec.ts
 
 const extractionScript = `
-  (() => {
-    const originalLinks = document.querySelectorAll('a[href*="i.pximg.net/img-original/"]');
-    if (originalLinks.length > 0) {
-      return Array.from(originalLinks).map(a => a.href);
-    }
+  (async () => {
+    const match = location.pathname.match(/\\/artworks\\/(\\d+)/);
+    if (!match) return [];
+    const id = match[1];
+    try {
+      const res = await fetch('/ajax/illust/' + id + '/pages');
+      const data = await res.json();
+      if (!data.error && Array.isArray(data.body)) {
+        return data.body.map(p => p.urls.regular);
+      }
+    } catch {}
     const imgs = document.querySelectorAll('img[src*="i.pximg.net"]');
     const urls = [];
     for (const img of imgs) {
