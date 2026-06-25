@@ -6,7 +6,18 @@
   "optionTabCloseDesc": {
     "message": "Close the image tabs after downloading"
   },
-  "optionDownloadDirDesc": {
-    "message": "The download location will follow your Chrome settings. If you want to save images in a subdirectory, enter it below."
+  "imageTabsFound": {
+    "message": "$count$ image tabs found.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "chromesDownloadLocation": {
+    "message": "Chrome's Download Location"
+  },
+  "subdirectoryOptional": {
+    "message": "Subdirectory (optional)"
   }
 }

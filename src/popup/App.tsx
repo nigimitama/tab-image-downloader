@@ -94,7 +94,11 @@ const App = () => {
     <ChakraProvider>
       <div style={{ margin: "10px", width: "500px" }}>
         <Text fontSize="md">
-          {imageSources !== null ? `${imageSources.length} image tabs found.` : ""}
+          {imageSources !== null
+            ? (chrome.i18n === undefined
+              ? `${imageSources.length} image tabs found.`
+              : chrome.i18n.getMessage("imageTabsFound", [String(imageSources.length)]))
+            : ""}
         </Text>
 
         <ImageTabList
