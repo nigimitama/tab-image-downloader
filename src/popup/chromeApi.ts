@@ -37,6 +37,11 @@ export type ImageSource = {
   downloadUrl?: string
 }
 
+export type DownloadStatus = 'downloading' | 'completed' | 'failed';
+
+export const getSourceKey = (source: ImageSource): string =>
+  `${source.tab.id ?? ''}-${source.imageUrl}`;
+
 export const extractImageUrlsFromTab = async (tabId: number): Promise<string[]> => {
   const results = await chrome.scripting.executeScript({
     target: { tabId },

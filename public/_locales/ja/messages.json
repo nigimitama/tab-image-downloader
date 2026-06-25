@@ -22,5 +22,8 @@
   },
   "subdirectoryOptional": {
     "message": "新規フォルダ名(任意)"
+  },
+  "downloadFailed": {
+    "message": "ダウンロード失敗"
   }
 }

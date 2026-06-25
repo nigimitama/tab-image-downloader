@@ -22,5 +22,8 @@
   },
   "subdirectoryOptional": {
     "message": "Subdirectory (optional)"
+  },
+  "downloadFailed": {
+    "message": "Download failed"
   }
 }

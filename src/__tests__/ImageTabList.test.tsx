@@ -21,6 +21,8 @@ type Overrides = {
   onToggleAll?: () => void
 }
 
+const defaultDownloadStatuses = new Map()
+
 const renderList = (sources: ImageSource[], overrides: Overrides = {}) =>
   renderWithChakra(
     <ImageTabList
@@ -28,6 +30,8 @@ const renderList = (sources: ImageSource[], overrides: Overrides = {}) =>
       selectedIds={overrides.selectedIds ?? allSelected(sources)}
       onToggle={overrides.onToggle ?? (() => {})}
       onToggleAll={overrides.onToggleAll ?? (() => {})}
+      downloadStatuses={defaultDownloadStatuses}
+      isDownloading={false}
     />,
   )
 
@@ -170,7 +174,7 @@ describe('ImageTabList', () => {
 
     const withProps = (selectedIds: Set<number>) => (
       <ChakraProvider>
-        <ImageTabList sources={sources} selectedIds={selectedIds} onToggle={() => {}} onToggleAll={() => {}} />
+        <ImageTabList sources={sources} selectedIds={selectedIds} onToggle={() => {}} onToggleAll={() => {}} downloadStatuses={defaultDownloadStatuses} isDownloading={false} />
       </ChakraProvider>
     )
 
