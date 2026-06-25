@@ -10,6 +10,7 @@ import {
   sleep,
   isDanbooruPostPage,
   isGelbooruPostPage,
+  isYanderePostPage,
   isBooruPostPage,
 } from '../popup/imageUrl'
 import { getImageSources } from '../popup/chromeApi'
@@ -153,12 +154,37 @@ describe('isGelbooruPostPage', () => {
   })
 })
 
+describe('isYanderePostPage', () => {
+  it.each([
+    'https://yande.re/post/show/1253771',
+    'https://yande.re/post/show/1',
+    // yande.re sometimes appends a tag slug after the id
+    'https://yande.re/post/show/1253771/bra',
+  ])('returns true for yande.re post page: %s', (url) => {
+    expect(isYanderePostPage(url)).toBe(true)
+  })
+
+  it.each([
+    'https://yande.re/post/show',
+    'https://yande.re/post/show/abc',
+    'https://yande.re/post',
+    'https://yande.re/',
+    'https://yande.re/pool/show/123',
+    'https://yande.re.evil.com/post/show/123',
+    'https://files.yande.re/post/show/123',
+    'https://example.com/post/show/123',
+  ])('returns false for non post page: %s', (url) => {
+    expect(isYanderePostPage(url)).toBe(false)
+  })
+})
+
 describe('isBooruPostPage', () => {
-  it('returns true for both Danbooru and Gelbooru post pages', () => {
+  it('returns true for Danbooru, Gelbooru and yande.re post pages', () => {
     expect(isBooruPostPage('https://danbooru.donmai.us/posts/11655837')).toBe(true)
     expect(
       isBooruPostPage('https://gelbooru.com/index.php?page=post&s=view&id=14357815'),
     ).toBe(true)
+    expect(isBooruPostPage('https://yande.re/post/show/1253771')).toBe(true)
   })
 
   it('returns false for unrelated pages', () => {
@@ -400,6 +426,27 @@ describe('getImageSources', () => {
     expect(result[0].tab.url).toBe(
       'https://gelbooru.com/index.php?page=post&s=view&id=14357815',
     )
+  })
+
+  it('extracts the sample image URL from a yande.re post page', async () => {
+    // Real example: visiting https://yande.re/post/show/1253771, the displayed
+    // <img id="image"> points at the sample image that should be downloaded.
+    queryMock.mockResolvedValue([
+      { id: 1, url: 'https://yande.re/post/show/1253771' },
+    ] as chrome.tabs.Tab[])
+    scriptMock.mockResolvedValue([
+      {
+        result:
+          'https://files.yande.re/sample/6cbcc2f97d722a85ec6db3af7a7c8093/yande.re%201253771%20sample%20bra%20danimaru%20lingerie%20open_shirt%20see_through%20seifuku.jpg',
+      },
+    ])
+
+    const result = await getImageSources()
+    expect(result).toHaveLength(1)
+    expect(result[0].imageUrl).toBe(
+      'https://files.yande.re/sample/6cbcc2f97d722a85ec6db3af7a7c8093/yande.re%201253771%20sample%20bra%20danimaru%20lingerie%20open_shirt%20see_through%20seifuku.jpg',
+    )
+    expect(result[0].tab.url).toBe('https://yande.re/post/show/1253771')
   })
 
   it('skips Booru post page tabs when no image is found', async () => {

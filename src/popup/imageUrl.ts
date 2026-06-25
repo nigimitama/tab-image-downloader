@@ -79,8 +79,18 @@ export const isGelbooruPostPage = (url: string): boolean => {
   }
 }
 
+// Moebooru engine (yande.re): /post/show/<id> (optionally followed by a tag slug)
+export const isYanderePostPage = (url: string): boolean => {
+  try {
+    const u = new URL(url)
+    return u.host === "yande.re" && /^\/post\/show\/\d+(?:\/[^/]*)?$/.test(u.pathname)
+  } catch {
+    return false
+  }
+}
+
 export const isBooruPostPage = (url: string): boolean =>
-  isDanbooruPostPage(url) || isGelbooruPostPage(url)
+  isDanbooruPostPage(url) || isGelbooruPostPage(url) || isYanderePostPage(url)
 
 export const upgradeTwitterImageUrl = (url: string): string => {
   const u = new URL(url)
