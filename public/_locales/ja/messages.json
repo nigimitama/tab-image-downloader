@@ -6,7 +6,18 @@
   "optionTabCloseDesc": {
     "message": "画像をダウンロード後にタブを閉じる"
   },
-  "optionDownloadDirDesc": {
-    "message": "ダウンロード場所はChromeの設定に従います。サブディレクトリに保存したい場合は以下に入力してください。"
+  "imageTabsFound": {
+    "message": "$count$個の画像のタブを検出しました",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "chromesDownloadLocation": {
+    "message": "Chromeのダウンロードフォルダ"
+  },
+  "subdirectoryOptional": {
+    "message": "新規フォルダ名(任意)"
   }
 }
