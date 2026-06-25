@@ -243,18 +243,30 @@ export const downloadFile = (url: string, filename: string): Promise<number> => 
 
 export const waitForDownloadComplete = (downloadId: number): Promise<void> => {
   return new Promise((resolve, reject) => {
+    let settled = false
+    const settle = (success: boolean, error?: string) => {
+      if (settled) return
+      settled = true
+      chrome.downloads.onChanged.removeListener(listener)
+      success ? resolve() : reject(new Error(error))
+    }
+
     const listener = (delta: chrome.downloads.DownloadDelta) => {
       if (delta.id !== downloadId) return
       if (!delta.state) return
-
       if (delta.state.current === "complete") {
-        chrome.downloads.onChanged.removeListener(listener)
-        resolve()
+        settle(true)
       } else if (delta.state.current === "interrupted") {
-        chrome.downloads.onChanged.removeListener(listener)
-        reject(new Error(`Download interrupted: ${delta.id}`))
+        settle(false, `Download interrupted: ${delta.id}`)
       }
     }
     chrome.downloads.onChanged.addListener(listener)
+
+    chrome.downloads.search({ id: downloadId }, (items) => {
+      if (items.length === 0) return
+      const state = items[0].state
+      if (state === "complete") settle(true)
+      else if (state === "interrupted") settle(false, `Download interrupted: ${downloadId}`)
+    })
   })
 }
