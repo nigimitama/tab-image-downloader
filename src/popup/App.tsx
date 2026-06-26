@@ -12,6 +12,7 @@ import {
 } from "@chakra-ui/react"
 import { FiDownload } from "react-icons/fi"
 import { getFileName } from "./imageUrl"
+import { t } from "./i18n"
 import {
   getImageSources,
   downloadFile,
@@ -180,9 +181,9 @@ const App = () => {
         ) : (
           <Text fontSize="md">
             {imageSources !== null
-              ? chrome.i18n === undefined
-                ? `${imageSources.length} image tabs found.`
-                : chrome.i18n.getMessage("imageTabsFound", [String(imageSources.length)])
+              ? t("imageTabsFound", `${imageSources.length} image tabs found.`, [
+                  String(imageSources.length),
+                ])
               : ""}
           </Text>
         )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Button, Input, InputGroup } from "@chakra-ui/react"
 import { FaFolderOpen } from "react-icons/fa"
 import { setSyncData } from "@/popup/chromeApi"
+import { t } from "@/popup/i18n"
 import { Settings } from "@/background"
 
 export const DownloadDirSetting = () => {
@@ -26,10 +27,7 @@ export const DownloadDirSetting = () => {
     chrome.downloads.showDefaultFolder()
   }
 
-  const downloadLocation =
-    chrome.i18n === undefined
-      ? "Chrome's Download Location"
-      : chrome.i18n.getMessage("chromesDownloadLocation")
+  const downloadLocation = t("chromesDownloadLocation", "Chrome's Download Location")
 
   const OpenButton = (
     <Button colorPalette="gray" size="sm" variant="outline" onClick={openFolder}>
@@ -44,11 +42,7 @@ export const DownloadDirSetting = () => {
         type="text"
         value={downloadDir}
         onChange={handleChange}
-        placeholder={
-          chrome.i18n === undefined
-            ? "Subdirectory (optional)"
-            : chrome.i18n.getMessage("subdirectoryOptional")
-        }
+        placeholder={t("subdirectoryOptional", "Subdirectory (optional)")}
         size="sm"
         fontSize="sm"
       />

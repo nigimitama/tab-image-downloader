@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Switch, Text } from "@chakra-ui/react"
 import { setSyncData } from "@/popup/chromeApi"
+import { t } from "@/popup/i18n"
 import { Settings } from "@/background"
 
 export const SiteParsingSetting = ({
@@ -31,9 +32,7 @@ export const SiteParsingSetting = ({
       <Switch.Control />
       <Switch.Label>
         <Text fontSize="sm">
-          {chrome.i18n === undefined
-            ? "optionSiteParsingDesc"
-            : chrome.i18n.getMessage("optionSiteParsingDesc")}
+          {t("optionSiteParsingDesc", "optionSiteParsingDesc")}
         </Text>
       </Switch.Label>
     </Switch.Root>

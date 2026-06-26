@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Switch, Text } from "@chakra-ui/react"
 import { setSyncData } from "@/popup/chromeApi"
+import { t } from "@/popup/i18n"
 import { Settings } from "@/background"
 
 export const CloseTabAfterDownload = () => {
@@ -24,9 +25,7 @@ export const CloseTabAfterDownload = () => {
       <Switch.Control />
       <Switch.Label>
         <Text fontSize="sm">
-          {chrome.i18n === undefined
-            ? "optionTabCloseDesc"
-            : chrome.i18n.getMessage("optionTabCloseDesc")}
+          {t("optionTabCloseDesc", "optionTabCloseDesc")}
         </Text>
       </Switch.Label>
     </Switch.Root>
