@@ -50,8 +50,7 @@ export const getXPhotoIndex = (url: string): number => {
 // Booru-type image boards show a single post per page with the image rendered
 // in an <img id="image"> element. We detect such post pages by URL and extract
 // the displayed image from the DOM (see extractBooruImageUrl).
-const isDonmaiHost = (host: string): boolean =>
-  host === "donmai.us" || host.endsWith(".donmai.us")
+const isDonmaiHost = (host: string): boolean => host === "donmai.us" || host.endsWith(".donmai.us")
 
 // Danbooru engine (danbooru.donmai.us, safebooru.donmai.us, ...): /posts/<id>
 export const isDanbooruPostPage = (url: string): boolean => {

@@ -1,15 +1,15 @@
-import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react";
-import { FiAlertTriangle } from "react-icons/fi";
-import { getSourceKey, type DownloadStatus, type ImageSource } from "@/popup/chromeApi";
+import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react"
+import { FiAlertTriangle } from "react-icons/fi"
+import { getSourceKey, type DownloadStatus, type ImageSource } from "@/popup/chromeApi"
 
 type Props = {
-  sources: ImageSource[];
-  selectedIds: Set<number>;
-  onToggle: (id: number) => void;
-  onToggleAll: () => void;
-  downloadStatuses: Map<string, DownloadStatus>;
-  isDownloading: boolean;
-};
+  sources: ImageSource[]
+  selectedIds: Set<number>
+  onToggle: (id: number) => void
+  onToggleAll: () => void
+  downloadStatuses: Map<string, DownloadStatus>
+  isDownloading: boolean
+}
 
 export const ImageTabList = ({
   sources,
@@ -19,24 +19,17 @@ export const ImageTabList = ({
   downloadStatuses,
   isDownloading,
 }: Props) => {
-  if (sources.length === 0) return null;
+  if (sources.length === 0) return null
 
   const selectableIds = sources
     .map((source) => source.tab.id)
-    .filter((id): id is number => id !== undefined);
-  const selectedCount = selectableIds.filter((id) => selectedIds.has(id)).length;
-  const allSelected =
-    selectableIds.length > 0 && selectedCount === selectableIds.length;
-  const someSelected = selectedCount > 0;
+    .filter((id): id is number => id !== undefined)
+  const selectedCount = selectableIds.filter((id) => selectedIds.has(id)).length
+  const allSelected = selectableIds.length > 0 && selectedCount === selectableIds.length
+  const someSelected = selectedCount > 0
 
   return (
-    <Box
-      mt={2}
-      borderWidth="1px"
-      borderColor="gray.200"
-      borderRadius="md"
-      overflow="hidden"
-    >
+    <Box mt={2} borderWidth="1px" borderColor="gray.200" borderRadius="md" overflow="hidden">
       <Flex
         align="center"
         justify="space-between"
@@ -65,11 +58,11 @@ export const ImageTabList = ({
 
       <Box maxHeight="240px" overflowY="auto">
         {sources.map((source, index) => {
-          const id = source.tab.id;
-          const isChecked = id !== undefined && selectedIds.has(id);
-          const status = downloadStatuses.get(getSourceKey(source));
-          const isFailed = status === 'failed';
-          const isDownloadingThis = status === 'downloading';
+          const id = source.tab.id
+          const isChecked = id !== undefined && selectedIds.has(id)
+          const status = downloadStatuses.get(getSourceKey(source))
+          const isFailed = status === "failed"
+          const isDownloadingThis = status === "downloading"
 
           return (
             <Box
@@ -124,7 +117,13 @@ export const ImageTabList = ({
                   {source.imageUrl}
                 </a>
                 {isFailed && (
-                  <Text fontSize="11px" color="red.500" display="flex" alignItems="center" gap="4px">
+                  <Text
+                    fontSize="11px"
+                    color="red.500"
+                    display="flex"
+                    alignItems="center"
+                    gap="4px"
+                  >
                     <FiAlertTriangle size="10px" />
                     {chrome.i18n === undefined
                       ? "Download failed"
@@ -151,13 +150,11 @@ export const ImageTabList = ({
                   </a>
                 )}
               </Box>
-              {isDownloadingThis && (
-                <Spinner size="sm" color="blue.500" flexShrink={0} />
-              )}
+              {isDownloadingThis && <Spinner size="sm" color="blue.500" flexShrink={0} />}
             </Box>
-          );
+          )
         })}
       </Box>
     </Box>
-  );
-};
+  )
+}
