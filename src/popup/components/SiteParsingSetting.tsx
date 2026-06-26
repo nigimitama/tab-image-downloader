@@ -19,19 +19,23 @@ export const SiteParsingSetting = ({
     });
   }, []);
 
-  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsChecked(event.target.checked);
-    setSyncData("isSiteParsingEnabled", event.target.checked);
-    onChange?.(event.target.checked);
+  const handleCheck = (details: { checked: boolean }) => {
+    setIsChecked(details.checked);
+    setSyncData("isSiteParsingEnabled", details.checked);
+    onChange?.(details.checked);
   };
 
   return (
-    <Switch size="sm" isChecked={isChecked} isDisabled={isDisabled} onChange={handleCheck}>
-      <Text fontSize="sm">
-        {chrome.i18n === undefined
-          ? "optionSiteParsingDesc"
-          : chrome.i18n.getMessage("optionSiteParsingDesc")}
-      </Text>
-    </Switch>
+    <Switch.Root size="sm" checked={isChecked} disabled={isDisabled} onCheckedChange={handleCheck}>
+      <Switch.HiddenInput />
+      <Switch.Control />
+      <Switch.Label>
+        <Text fontSize="sm">
+          {chrome.i18n === undefined
+            ? "optionSiteParsingDesc"
+            : chrome.i18n.getMessage("optionSiteParsingDesc")}
+        </Text>
+      </Switch.Label>
+    </Switch.Root>
   );
 };

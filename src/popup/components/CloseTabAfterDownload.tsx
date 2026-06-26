@@ -13,18 +13,22 @@ export const CloseTabAfterDownload = () => {
     });
   }, []);
 
-  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsChecked(event.target.checked);
-    setSyncData("isCloseTabAfterDownload", event.target.checked);
+  const handleCheck = (details: { checked: boolean }) => {
+    setIsChecked(details.checked);
+    setSyncData("isCloseTabAfterDownload", details.checked);
   };
 
   return (
-    <Switch size="sm" isChecked={isChecked} onChange={handleCheck}>
-      <Text fontSize="sm">
-        {chrome.i18n === undefined
-          ? "optionTabCloseDesc"
-          : chrome.i18n.getMessage("optionTabCloseDesc")}
-      </Text>
-    </Switch>
+    <Switch.Root size="sm" checked={isChecked} onCheckedChange={handleCheck}>
+      <Switch.HiddenInput />
+      <Switch.Control />
+      <Switch.Label>
+        <Text fontSize="sm">
+          {chrome.i18n === undefined
+            ? "optionTabCloseDesc"
+            : chrome.i18n.getMessage("optionTabCloseDesc")}
+        </Text>
+      </Switch.Label>
+    </Switch.Root>
   );
 };

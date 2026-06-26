@@ -1,5 +1,5 @@
 import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react";
-import { WarningIcon } from "@chakra-ui/icons";
+import { FiAlertTriangle } from "react-icons/fi";
 import { getSourceKey, type DownloadStatus, type ImageSource } from "@/popup/chromeApi";
 
 type Props = {
@@ -46,15 +46,18 @@ export const ImageTabList = ({
         borderColor="gray.200"
         bg="gray.50"
       >
-        <Checkbox
+        <Checkbox.Root
           size="sm"
-          isChecked={allSelected}
-          isIndeterminate={someSelected && !allSelected}
-          onChange={onToggleAll}
-          isDisabled={isDownloading}
+          checked={someSelected && !allSelected ? "indeterminate" : allSelected}
+          onCheckedChange={onToggleAll}
+          disabled={isDownloading}
         >
-          <Text fontSize="xs">Select all</Text>
-        </Checkbox>
+          <Checkbox.HiddenInput />
+          <Checkbox.Control />
+          <Checkbox.Label>
+            <Text fontSize="xs">Select all</Text>
+          </Checkbox.Label>
+        </Checkbox.Root>
         <Text fontSize="xs" color="gray.500">
           {selectedCount} / {selectableIds.length} selected
         </Text>
@@ -79,14 +82,17 @@ export const ImageTabList = ({
               _notLast={{ borderBottomWidth: "1px", borderColor: "gray.100" }}
               bg={isFailed ? "red.50" : undefined}
             >
-              <Checkbox
+              <Checkbox.Root
                 size="sm"
-                isChecked={isChecked}
-                isDisabled={id === undefined || isDownloading}
-                onChange={() => id !== undefined && onToggle(id)}
+                checked={isChecked}
+                disabled={id === undefined || isDownloading}
+                onCheckedChange={() => id !== undefined && onToggle(id)}
                 aria-label={`Toggle ${source.imageUrl}`}
                 flexShrink={0}
-              />
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+              </Checkbox.Root>
               <img
                 src={source.imageUrl}
                 alt=""
@@ -119,7 +125,7 @@ export const ImageTabList = ({
                 </a>
                 {isFailed && (
                   <Text fontSize="11px" color="red.500" display="flex" alignItems="center" gap="4px">
-                    <WarningIcon boxSize="10px" />
+                    <FiAlertTriangle size="10px" />
                     {chrome.i18n === undefined
                       ? "Download failed"
                       : chrome.i18n.getMessage("downloadFailed")}
