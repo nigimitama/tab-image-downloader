@@ -4,7 +4,6 @@ import {
   getXPhotoIndex,
   upgradeTwitterImageUrl,
   isBooruPostPage,
-  isGelbooruPostPage,
   isPixivArtworkPage,
 } from "@/popup/imageUrl"
 
@@ -34,7 +33,6 @@ export const getSyncData = async <T = Record<string, unknown>>(keys: string[]): 
 export type ImageSource = {
   tab: chrome.tabs.Tab
   imageUrl: string
-  downloadUrl?: string
 }
 
 export type DownloadStatus = 'downloading' | 'completed' | 'failed';
@@ -99,43 +97,6 @@ export const extractPixivImageUrls = async (tabId: number): Promise<string[]> =>
   return results?.[0]?.result ?? []
 }
 
-// Some CDNs (Gelbooru's img*.gelbooru.com, Pixiv's i.pximg.net) reject requests
-// without a proper Referer header.  chrome.downloads.download() sends no
-// Referer, so direct downloads may silently fail.
-//
-// Fetch the image from ISOLATED world (the default for content scripts).
-// The extension's host_permissions grant cross-origin access to the CDN,
-// and declarativeNetRequest rules inject the required Referer header.
-export const fetchImageAsDataUrl = async (
-  tabId: number,
-  imageUrl: string,
-): Promise<string | null> => {
-  try {
-    const results = await chrome.scripting.executeScript({
-      target: { tabId },
-      func: async (url: string) => {
-        try {
-          const res = await fetch(url)
-          if (!res.ok) return null
-          const blob = await res.blob()
-          return await new Promise<string | null>((resolve) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result as string)
-            reader.onerror = () => resolve(null)
-            reader.readAsDataURL(blob)
-          })
-        } catch {
-          return null
-        }
-      },
-      args: [imageUrl],
-    })
-    return (results?.[0]?.result as string | null) ?? null
-  } catch {
-    return null
-  }
-}
-
 export const getImageSources = async (
   options: { isSiteParsingEnabled?: boolean } = {},
 ): Promise<ImageSource[]> => {
@@ -168,12 +129,6 @@ export const getImageSources = async (
         try {
           const imageUrl = await extractBooruImageUrl(tab.id)
           if (imageUrl) {
-            if (isGelbooruPostPage(tab.url)) {
-              const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
-              if (downloadUrl) {
-                return { tab, imageUrl, downloadUrl }
-              }
-            }
             return { tab, imageUrl }
           }
         } catch (e) {
@@ -184,12 +139,7 @@ export const getImageSources = async (
         try {
           const imageUrls = await extractPixivImageUrls(tab.id)
           if (imageUrls.length > 0) {
-            const sources: ImageSource[] = []
-            for (const imageUrl of imageUrls) {
-              const downloadUrl = await fetchImageAsDataUrl(tab.id, imageUrl)
-              sources.push(downloadUrl ? { tab, imageUrl, downloadUrl } : { tab, imageUrl })
-            }
-            return sources
+            return imageUrls.map((imageUrl) => ({ tab, imageUrl }))
           }
         } catch (e) {
           console.error(`Failed to extract image from tab ${tab.id}:`, e)
@@ -204,13 +154,14 @@ export const getImageSources = async (
   return sources
 }
 
-export const downloadFile = (url: string, filename: string): Promise<number> => {
-  const downloading = chrome.downloads.download({
-    url: url,
-    filename: filename,
-    saveAs: false,
+export const downloadFile = async (url: string, filename: string): Promise<number> => {
+  const response = await chrome.runtime.sendMessage({
+    type: "downloadImage",
+    url,
+    filename,
   })
-  return downloading
+  if (response.error) throw new Error(response.error)
+  return response.downloadId
 }
 
 export const waitForDownloadComplete = (downloadId: number): Promise<void> => {
