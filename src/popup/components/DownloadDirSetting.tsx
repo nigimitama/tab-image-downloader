@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Button, Group, Input, InputAddon } from "@chakra-ui/react"
+import { Button, Input, InputGroup } from "@chakra-ui/react"
 import { FaFolderOpen } from "react-icons/fa"
 import { setSyncData } from "@/popup/chromeApi"
 import { Settings } from "@/background"
@@ -26,14 +26,20 @@ export const DownloadDirSetting = () => {
     chrome.downloads.showDefaultFolder()
   }
 
+  const downloadLocation =
+    chrome.i18n === undefined
+      ? "Chrome's Download Location"
+      : chrome.i18n.getMessage("chromesDownloadLocation")
+
+  const OpenButton = (
+    <Button colorPalette="gray" size="sm" variant="outline" onClick={openFolder}>
+      <FaFolderOpen />
+      Open
+    </Button>
+  )
+
   return (
-    <Group attached>
-      <InputAddon fontSize="xs">
-        {chrome.i18n === undefined
-          ? "Chrome's Download Location"
-          : chrome.i18n.getMessage("chromesDownloadLocation")}{" "}
-        /
-      </InputAddon>
+    <InputGroup startAddon={`${downloadLocation} /`} endElement={OpenButton}>
       <Input
         type="text"
         value={downloadDir}
@@ -43,12 +49,9 @@ export const DownloadDirSetting = () => {
             ? "Subdirectory (optional)"
             : chrome.i18n.getMessage("subdirectoryOptional")
         }
+        size="sm"
         fontSize="sm"
       />
-      <Button colorPalette="gray" size="sm" variant="outline" onClick={openFolder}>
-        <FaFolderOpen />
-        Open
-      </Button>
-    </Group>
+    </InputGroup>
   )
 }
