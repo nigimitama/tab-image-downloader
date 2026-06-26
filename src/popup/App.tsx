@@ -4,7 +4,6 @@ import {
   Text,
   ChakraProvider,
   Separator,
-  Box,
   Spinner,
   Flex,
   defaultSystem,
@@ -14,10 +13,8 @@ import { FiDownload } from "react-icons/fi"
 import { t } from "./i18n"
 import { getImageSources, getSyncData, getSourceKey, type ImageSource } from "./chromeApi"
 import { Settings } from "@/background"
-import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload"
-import { DownloadDirSetting } from "./components/DownloadDirSetting"
-import { SiteParsingSetting } from "./components/SiteParsingSetting"
 import { ImageTabList } from "./components/ImageTabList"
+import { SettingsSection } from "./components/SettingsSection"
 import { useSelection } from "./hooks/useSelection"
 import { useDownload } from "./hooks/useDownload"
 
@@ -102,23 +99,7 @@ const App = () => {
 
         <Separator my={3} />
 
-        <Box>
-          <Text fontSize="md" color="gray.500" fontWeight="semibold" textTransform="uppercase">
-            Settings
-          </Text>
-          <Box mt={1}>
-            <SiteParsingSetting
-              onChange={(enabled) => loadImages(enabled)}
-              isDisabled={isLoading}
-            />
-          </Box>
-          <Box mt={2}>
-            <CloseTabAfterDownload />
-          </Box>
-          <Box mt={2}>
-            <DownloadDirSetting />
-          </Box>
-        </Box>
+        <SettingsSection onSiteParsingChange={(enabled) => loadImages(enabled)} isLoading={isLoading} />
       </div>
     </ChakraProvider>
   )
