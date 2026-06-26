@@ -26,6 +26,7 @@ export default defineManifest({
     "https://yande.re/*",
     "https://files.yande.re/*",
     "https://www.pixiv.net/*",
+    "https://pixiv.net/*",
     "https://*.pximg.net/*",
   ],
   background: {
