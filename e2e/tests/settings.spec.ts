@@ -10,9 +10,9 @@ test("closes image tab after download when setting is enabled", async ({
   await settingsPage.goto(
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
-  // Wait for the checkbox state to load from storage (default is true/checked)
-  const checkbox = settingsPage.getByRole("checkbox", { name: /Close the image tabs after/ });
-  await expect(checkbox).toBeChecked({ timeout: 5_000 });
+  // Wait for the switch state to load from storage (default is on)
+  const toggle = settingsPage.getByRole("switch", { name: /Close the image tabs after/ });
+  await expect(toggle).toBeChecked({ timeout: 5_000 });
   await settingsPage.close();
 
   // Open an image tab
@@ -54,11 +54,10 @@ test("keeps image tab open after download when setting is disabled", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
   // Wait for storage-loaded state before interacting
-  const checkbox = settingsPage.getByRole("checkbox", { name: /Close the image tabs after/ });
-  await expect(checkbox).toBeChecked({ timeout: 5_000 });
-  // Chakra UI checkbox overlay intercepts pointer events; use force click
-  await checkbox.uncheck({ force: true });
-  await expect(checkbox).not.toBeChecked();
+  const toggle = settingsPage.getByRole("switch", { name: /Close the image tabs after/ });
+  await expect(toggle).toBeChecked({ timeout: 5_000 });
+  await toggle.uncheck({ force: true });
+  await expect(toggle).not.toBeChecked();
   // Wait for storage write to complete before closing
   await settingsPage.waitForTimeout(500);
   await settingsPage.close();
@@ -125,16 +124,16 @@ test("persists settings across popup reopens", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
 
-  // Ensure checkbox is checked before toggling — earlier tests may have changed it
-  const checkbox = popup1.getByRole("checkbox", { name: /Close the image tabs after/ });
-  await expect(checkbox).toBeAttached({ timeout: 5_000 });
-  if (!(await checkbox.isChecked())) {
-    await checkbox.check({ force: true });
+  // Ensure switch is on before toggling — earlier tests may have changed it
+  const toggle = popup1.getByRole("switch", { name: /Close the image tabs after/ });
+  await expect(toggle).toBeAttached({ timeout: 5_000 });
+  if (!(await toggle.isChecked())) {
+    await toggle.check({ force: true });
     await popup1.waitForTimeout(500);
   }
-  // Now uncheck to verify this state persists
-  await checkbox.uncheck({ force: true });
-  await expect(checkbox).not.toBeChecked();
+  // Now turn off to verify this state persists
+  await toggle.uncheck({ force: true });
+  await expect(toggle).not.toBeChecked();
 
   const dirInput = popup1.getByPlaceholder("Subdirectory (optional)");
   await dirInput.fill("my-folder");
@@ -149,8 +148,8 @@ test("persists settings across popup reopens", async ({
     `chrome-extension://${extensionId}/src/popup/index.html`
   );
 
-  const checkbox2 = popup2.getByRole("checkbox", { name: /Close the image tabs after/ });
-  await expect(checkbox2).not.toBeChecked({ timeout: 5_000 });
+  const toggle2 = popup2.getByRole("switch", { name: /Close the image tabs after/ });
+  await expect(toggle2).not.toBeChecked({ timeout: 5_000 });
   const dirInput2 = popup2.getByPlaceholder("Subdirectory (optional)");
   await expect(dirInput2).toHaveValue("my-folder");
 });
