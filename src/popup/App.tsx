@@ -51,7 +51,7 @@ const downloadImages = async (
       updateStatus(key, 'downloading');
 
       try {
-        const downloadId = await downloadFile(source.downloadUrl ?? source.imageUrl, savePath);
+        const downloadId = await downloadFile(source.imageUrl, savePath);
         console.log(`File download started. Download ID: ${downloadId}`);
         await waitForDownloadComplete(downloadId);
         tabDownloadCounts.get(tabId)!.succeeded++;
