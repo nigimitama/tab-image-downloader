@@ -30,7 +30,7 @@ export const DownloadDirSetting = () => {
   const downloadLocation = t("chromesDownloadLocation", "Chrome's Download Location")
 
   const OpenButton = (
-    <Button colorPalette="gray" size="sm" variant="outline" onClick={openFolder}>
+    <Button colorPalette="gray" size="xs" variant="outline" onClick={openFolder}>
       <FaFolderOpen />
       Open
     </Button>
