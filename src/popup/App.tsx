@@ -27,6 +27,7 @@ import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload"
 import { DownloadDirSetting } from "./components/DownloadDirSetting"
 import { SiteParsingSetting } from "./components/SiteParsingSetting"
 import { ImageTabList } from "./components/ImageTabList"
+import { useSelection } from "./hooks/useSelection"
 
 const downloadImages = async (
   sources: ImageSource[],
@@ -89,7 +90,8 @@ const App = () => {
   const [imageSources, setImageSources] = useState<ImageSource[] | null>(null)
   const [isClicked, setIsClicked] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const { selectedIds, selectAll, toggleSelected, toggleAll, selectedSources } =
+    useSelection(imageSources)
   const [downloadStatuses, setDownloadStatuses] = useState<Map<string, DownloadStatus>>(new Map())
 
   const isDownloading = Array.from(downloadStatuses.values()).some((s) => s === "downloading")
@@ -108,11 +110,7 @@ const App = () => {
     try {
       const sources = await getImageSources({ isSiteParsingEnabled })
       setImageSources(sources)
-      setSelectedIds(
-        new Set(
-          sources.map((source) => source.tab.id).filter((id): id is number => id !== undefined),
-        ),
-      )
+      selectAll(sources)
     } finally {
       setIsLoading(false)
     }
@@ -131,32 +129,6 @@ const App = () => {
     }
     load()
   }, [])
-
-  const toggleSelected = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }
-
-  const toggleAll = () => {
-    const ids = (imageSources ?? [])
-      .map((source) => source.tab.id)
-      .filter((id): id is number => id !== undefined)
-    setSelectedIds((prev) => {
-      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id))
-      return allSelected ? new Set() : new Set(ids)
-    })
-  }
-
-  const selectedSources = (imageSources ?? []).filter(
-    (source) => source.tab.id !== undefined && selectedIds.has(source.tab.id),
-  )
 
   const updateStatus = (key: string, status: DownloadStatus) => {
     setDownloadStatuses((prev) => {
