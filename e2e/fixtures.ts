@@ -20,10 +20,12 @@ export const test = base.extend<{
     const downloadDir = fs.mkdtempSync(path.join(os.tmpdir(), "tid-e2e-"));
     const context = await chromium.launchPersistentContext("", {
       channel: "chromium",
+      locale: "en-US",
       args: [
         `--disable-extensions-except=${pathToExtension}`,
         `--load-extension=${pathToExtension}`,
         `--download-default-dir=${downloadDir}`,
+        "--lang=en-US",
       ],
     });
     (context as any).__downloadDir = downloadDir;

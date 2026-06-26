@@ -1,6 +1,7 @@
 import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react"
 import { FiAlertTriangle } from "react-icons/fi"
 import { getSourceKey, type DownloadStatus, type ImageSource } from "@/popup/chromeApi"
+import { t } from "@/popup/i18n"
 
 type Props = {
   sources: ImageSource[]
@@ -125,9 +126,7 @@ export const ImageTabList = ({
                     gap="4px"
                   >
                     <FiAlertTriangle size="10px" />
-                    {chrome.i18n === undefined
-                      ? "Download failed"
-                      : chrome.i18n.getMessage("downloadFailed")}
+                    {t("downloadFailed", "Download failed")}
                   </Text>
                 )}
                 {!isFailed && source.tab.url && source.tab.url !== source.imageUrl && (
