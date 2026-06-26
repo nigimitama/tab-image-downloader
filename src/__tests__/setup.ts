@@ -1,5 +1,5 @@
-import { vi } from 'vitest'
-import '@testing-library/jest-dom/vitest'
+import { vi } from "vitest"
+import "@testing-library/jest-dom/vitest"
 
 const chromeMock = {
   storage: {
@@ -27,4 +27,4 @@ const chromeMock = {
   },
 }
 
-vi.stubGlobal('chrome', chromeMock)
+vi.stubGlobal("chrome", chromeMock)

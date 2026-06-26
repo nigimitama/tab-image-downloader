@@ -1,22 +1,22 @@
-import { useState, useEffect } from "react";
-import { Switch, Text } from "@chakra-ui/react";
-import { setSyncData } from "@/popup/chromeApi";
-import { Settings } from "@/background";
+import { useState, useEffect } from "react"
+import { Switch, Text } from "@chakra-ui/react"
+import { setSyncData } from "@/popup/chromeApi"
+import { Settings } from "@/background"
 
 export const CloseTabAfterDownload = () => {
-  const [isChecked, setIsChecked] = useState(false);
+  const [isChecked, setIsChecked] = useState(false)
 
   useEffect(() => {
-    if (chrome.storage === undefined) return;
+    if (chrome.storage === undefined) return
     chrome.storage.sync.get(["isCloseTabAfterDownload"], (result: Settings) => {
-      setIsChecked(result.isCloseTabAfterDownload);
-    });
-  }, []);
+      setIsChecked(result.isCloseTabAfterDownload)
+    })
+  }, [])
 
   const handleCheck = (details: { checked: boolean }) => {
-    setIsChecked(details.checked);
-    setSyncData("isCloseTabAfterDownload", details.checked);
-  };
+    setIsChecked(details.checked)
+    setSyncData("isCloseTabAfterDownload", details.checked)
+  }
 
   return (
     <Switch.Root size="sm" checked={isChecked} onCheckedChange={handleCheck}>
@@ -30,5 +30,5 @@ export const CloseTabAfterDownload = () => {
         </Text>
       </Switch.Label>
     </Switch.Root>
-  );
-};
+  )
+}

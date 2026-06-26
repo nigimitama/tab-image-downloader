@@ -1,14 +1,14 @@
 export type Settings = {
-  isCloseTabAfterDownload: boolean;
-  downloadDir: string | null;
-  isSiteParsingEnabled: boolean;
-};
+  isCloseTabAfterDownload: boolean
+  downloadDir: string | null
+  isSiteParsingEnabled: boolean
+}
 
 const defaultSettings: Settings = {
   isCloseTabAfterDownload: true,
   downloadDir: null, // if null, use default download directory
   isSiteParsingEnabled: true,
-};
+}
 
 const setupRefererRules = () => {
   chrome.declarativeNetRequest.updateDynamicRules({
@@ -59,55 +59,53 @@ const setupRefererRules = () => {
         },
       },
     ],
-  });
-};
+  })
+}
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set(defaultSettings);
-  setupRefererRules();
-});
+  chrome.storage.sync.set(defaultSettings)
+  setupRefererRules()
+})
 
 chrome.runtime.onStartup.addListener(() => {
-  setupRefererRules();
-});
+  setupRefererRules()
+})
 
 const needsRefererDownload = (url: string): boolean => {
   try {
-    const host = new URL(url).hostname;
-    return host.endsWith("pximg.net") || host.endsWith("gelbooru.com");
+    const host = new URL(url).hostname
+    return host.endsWith("pximg.net") || host.endsWith("gelbooru.com")
   } catch {
-    return false;
+    return false
   }
-};
+}
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type !== "downloadImage") return false;
-  (async () => {
+  if (message.type !== "downloadImage") return false
+  ;(async () => {
     try {
-      let downloadUrl = message.url;
+      let downloadUrl = message.url
       if (needsRefererDownload(message.url)) {
-        const res = await fetch(message.url);
-        if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status}`);
-        const blob = await res.blob();
-        const buffer = await blob.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = "";
+        const res = await fetch(message.url)
+        if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status}`)
+        const blob = await res.blob()
+        const buffer = await blob.arrayBuffer()
+        const bytes = new Uint8Array(buffer)
+        let binary = ""
         for (let i = 0; i < bytes.length; i += 8192) {
-          binary += String.fromCharCode(
-            ...bytes.subarray(i, Math.min(i + 8192, bytes.length)),
-          );
+          binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + 8192, bytes.length)))
         }
-        downloadUrl = `data:${blob.type};base64,${btoa(binary)}`;
+        downloadUrl = `data:${blob.type};base64,${btoa(binary)}`
       }
       const downloadId = await chrome.downloads.download({
         url: downloadUrl,
         filename: message.filename,
         saveAs: false,
-      });
-      sendResponse({ downloadId });
+      })
+      sendResponse({ downloadId })
     } catch (e) {
-      sendResponse({ error: (e as Error).message });
+      sendResponse({ error: (e as Error).message })
     }
-  })();
-  return true;
-});
+  })()
+  return true
+})

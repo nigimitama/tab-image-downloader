@@ -8,9 +8,9 @@ import {
 } from "@/popup/imageUrl"
 
 export const setSyncData = (key: string, value: unknown) => {
-  if (chrome.storage === undefined) return null;
-  chrome.storage.sync.set({ [key]: value });
-};
+  if (chrome.storage === undefined) return null
+  chrome.storage.sync.set({ [key]: value })
+}
 
 export const getSyncData = async <T = Record<string, unknown>>(keys: string[]): Promise<T> => {
   try {
@@ -35,10 +35,10 @@ export type ImageSource = {
   imageUrl: string
 }
 
-export type DownloadStatus = 'downloading' | 'completed' | 'failed';
+export type DownloadStatus = "downloading" | "completed" | "failed"
 
 export const getSourceKey = (source: ImageSource): string =>
-  `${source.tab.id ?? ''}-${source.imageUrl}`;
+  `${source.tab.id ?? ""}-${source.imageUrl}`
 
 export const extractImageUrlsFromTab = async (tabId: number): Promise<string[]> => {
   const results = await chrome.scripting.executeScript({
@@ -81,7 +81,9 @@ export const extractPixivImageUrls = async (tabId: number): Promise<string[]> =>
         if (!data.error && Array.isArray(data.body)) {
           return data.body.map((p: { urls: { regular: string } }) => p.urls.regular)
         }
-      } catch { /* fall through to DOM extraction */ }
+      } catch {
+        /* fall through to DOM extraction */
+      }
       // Fallback: extract from visible <img> elements
       const imgs = document.querySelectorAll<HTMLImageElement>('img[src*="i.pximg.net"]')
       const urls: string[] = []
