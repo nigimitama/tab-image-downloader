@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Checkbox, Text } from "@chakra-ui/react";
+import { Switch, Text } from "@chakra-ui/react";
 import { setSyncData } from "@/popup/chromeApi";
 import { Settings } from "@/background";
 
@@ -19,12 +19,12 @@ export const CloseTabAfterDownload = () => {
   };
 
   return (
-    <Checkbox size="sm" isChecked={isChecked} onChange={handleCheck}>
+    <Switch size="sm" isChecked={isChecked} onChange={handleCheck}>
       <Text fontSize="sm">
         {chrome.i18n === undefined
           ? "optionTabCloseDesc"
           : chrome.i18n.getMessage("optionTabCloseDesc")}
       </Text>
-    </Checkbox>
+    </Switch>
   );
 };

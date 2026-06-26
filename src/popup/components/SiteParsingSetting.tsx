@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Checkbox, Text } from "@chakra-ui/react";
+import { Switch, Text } from "@chakra-ui/react";
 import { setSyncData } from "@/popup/chromeApi";
 import { Settings } from "@/background";
 
@@ -26,12 +26,12 @@ export const SiteParsingSetting = ({
   };
 
   return (
-    <Checkbox size="sm" isChecked={isChecked} isDisabled={isDisabled} onChange={handleCheck}>
+    <Switch size="sm" isChecked={isChecked} isDisabled={isDisabled} onChange={handleCheck}>
       <Text fontSize="sm">
         {chrome.i18n === undefined
           ? "optionSiteParsingDesc"
           : chrome.i18n.getMessage("optionSiteParsingDesc")}
       </Text>
-    </Checkbox>
+    </Switch>
   );
 };
