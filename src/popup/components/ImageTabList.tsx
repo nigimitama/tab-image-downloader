@@ -1,4 +1,4 @@
-import { Box, Checkbox, Flex, Spinner, Text } from "@chakra-ui/react"
+import { Box, Checkbox, Flex, Link, Spinner, Text } from "@chakra-ui/react"
 import { FiAlertTriangle } from "react-icons/fi"
 import { getSourceKey, type DownloadStatus, type ImageSource } from "@/popup/chromeApi"
 import { t } from "@/popup/i18n"
@@ -100,23 +100,21 @@ export const ImageTabList = ({
                 }}
               />
               <Box flex="1" minWidth={0} display="flex" flexDirection="column">
-                <a
+                <Link
                   href={source.imageUrl}
                   target="_blank"
                   rel="noreferrer"
                   title={source.imageUrl}
-                  style={{
-                    fontSize: "12px",
-                    color: isFailed ? "#E53E3E" : "#3182ce",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
-                    display: "block",
-                    minWidth: 0,
-                  }}
+                  fontSize="12px"
+                  color={isFailed ? "red.500" : "blue.500"}
+                  overflow="hidden"
+                  whiteSpace="nowrap"
+                  textOverflow="ellipsis"
+                  display="block"
+                  minWidth={0}
                 >
                   {source.imageUrl}
-                </a>
+                </Link>
                 {isFailed && (
                   <Text
                     fontSize="11px"
@@ -130,23 +128,21 @@ export const ImageTabList = ({
                   </Text>
                 )}
                 {!isFailed && source.tab.url && source.tab.url !== source.imageUrl && (
-                  <a
+                  <Link
                     href={source.tab.url}
                     target="_blank"
                     rel="noreferrer"
                     title={source.tab.url}
-                    style={{
-                      fontSize: "11px",
-                      color: "#718096",
-                      overflow: "hidden",
-                      whiteSpace: "nowrap",
-                      textOverflow: "ellipsis",
-                      display: "block",
-                      minWidth: 0,
-                    }}
+                    fontSize="11px"
+                    color="gray.500"
+                    overflow="hidden"
+                    whiteSpace="nowrap"
+                    textOverflow="ellipsis"
+                    display="block"
+                    minWidth={0}
                   >
                     Open source page
-                  </a>
+                  </Link>
                 )}
               </Box>
               {isDownloadingThis && <Spinner size="sm" color="blue.500" flexShrink={0} />}
