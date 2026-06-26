@@ -10,12 +10,7 @@ const defaultSettings: Settings = {
   isSiteParsingEnabled: true,
 };
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set(defaultSettings);
-
-  // Gelbooru's CDN rejects requests without a Referer from gelbooru.com
-  // (hotlink protection). Add the header so chrome.downloads.download works.
-  // Pixiv's CDN (i.pximg.net) similarly requires a Referer from pixiv.net.
+const setupRefererRules = () => {
   chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [1, 2],
     addRules: [
@@ -37,6 +32,7 @@ chrome.runtime.onInstalled.addListener(() => {
           resourceTypes: [
             chrome.declarativeNetRequest.ResourceType.IMAGE,
             chrome.declarativeNetRequest.ResourceType.OTHER,
+            chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
           ],
         },
       },
@@ -58,9 +54,19 @@ chrome.runtime.onInstalled.addListener(() => {
           resourceTypes: [
             chrome.declarativeNetRequest.ResourceType.IMAGE,
             chrome.declarativeNetRequest.ResourceType.OTHER,
+            chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
           ],
         },
       },
     ],
   });
+};
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.set(defaultSettings);
+  setupRefererRules();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  setupRefererRules();
 });

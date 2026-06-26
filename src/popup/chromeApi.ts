@@ -103,74 +103,37 @@ export const extractPixivImageUrls = async (tabId: number): Promise<string[]> =>
 // without a proper Referer header.  chrome.downloads.download() sends no
 // Referer, so direct downloads may silently fail.
 //
-// Workaround: create a hidden iframe on the source page that loads the image
-// URL.  The iframe request carries the correct Referer (from the parent page),
-// so the CDN serves the real image.  Once the iframe has loaded, we inject a
-// script into it that re-fetches the image (same-origin) and returns a
-// data-URL that chrome.downloads.download() can use.
+// Fetch the image from ISOLATED world (the default for content scripts).
+// The extension's host_permissions grant cross-origin access to the CDN,
+// and declarativeNetRequest rules inject the required Referer header.
 export const fetchImageAsDataUrl = async (
   tabId: number,
   imageUrl: string,
 ): Promise<string | null> => {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    world: "MAIN",
-    func: (url: string) => {
-      const existing = document.getElementById("__tid_loader")
-      if (existing) existing.remove()
-      const iframe = document.createElement("iframe")
-      iframe.id = "__tid_loader"
-      iframe.src = url
-      iframe.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0"
-      document.body.appendChild(iframe)
-    },
-    args: [imageUrl],
-  })
-
-  let dataUrl: string | null = null
-  for (let attempt = 0; attempt < 15; attempt++) {
-    await new Promise((r) => setTimeout(r, 500))
-    try {
-      const results = await chrome.scripting.executeScript({
-        target: { tabId, allFrames: true },
-        world: "MAIN",
-        func: async () => {
-          if (!document.contentType?.startsWith("image/")) return null
-          try {
-            const res = await fetch(document.URL)
-            if (!res.ok) return null
-            const blob = await res.blob()
-            return await new Promise<string>((resolve) => {
-              const reader = new FileReader()
-              reader.onloadend = () => resolve(reader.result as string)
-              reader.readAsDataURL(blob)
-            })
-          } catch {
-            return null
-          }
-        },
-      })
-      for (const r of results) {
-        if (r.result) {
-          dataUrl = r.result as string
-          break
-        }
-      }
-      if (dataUrl) break
-    } catch {
-      // iframe not ready or injection failed — retry
-    }
-  }
-
-  chrome.scripting
-    .executeScript({
+  try {
+    const results = await chrome.scripting.executeScript({
       target: { tabId },
-      world: "MAIN",
-      func: () => document.getElementById("__tid_loader")?.remove(),
+      func: async (url: string) => {
+        try {
+          const res = await fetch(url)
+          if (!res.ok) return null
+          const blob = await res.blob()
+          return await new Promise<string | null>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result as string)
+            reader.onerror = () => resolve(null)
+            reader.readAsDataURL(blob)
+          })
+        } catch {
+          return null
+        }
+      },
+      args: [imageUrl],
     })
-    .catch(() => {})
-
-  return dataUrl
+    return (results?.[0]?.result as string | null) ?? null
+  } catch {
+    return null
+  }
 }
 
 export const getImageSources = async (
