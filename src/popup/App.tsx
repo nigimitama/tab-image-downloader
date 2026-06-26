@@ -8,6 +8,7 @@ import {
   Spinner,
   Flex,
   defaultSystem,
+  Center,
 } from "@chakra-ui/react"
 import { FiDownload } from "react-icons/fi"
 import { getFileName } from "./imageUrl"
@@ -170,7 +171,7 @@ const App = () => {
 
   return (
     <ChakraProvider value={defaultSystem}>
-      <div style={{ margin: "10px", width: "500px" }}>
+      <div style={{ margin: "10px", width: "600px" }}>
         {isLoading ? (
           <Flex align="center" gap={2}>
             <Spinner size="sm" color="blue.500" />
@@ -195,34 +196,35 @@ const App = () => {
           isDownloading={isDownloading}
         />
 
-        <Button
-          style={{ marginTop: "10px", display: "block", margin: "10px auto 0" }}
-          variant="outline"
-          colorPalette="blue"
-          aria-label="Download"
-          size="lg"
-          onClick={() => downloadImages(selectedSources, setIsClicked, updateStatus)}
-          loading={isClicked}
-          disabled={selectedSources.length === 0 || isDownloading}
-        >
-          <FiDownload />
-          Download Images
-        </Button>
+        <Center>
+          <Button
+            style={{ marginTop: "10px" }}
+            variant="outline"
+            colorPalette="blue"
+            aria-label="Download"
+            size="lg"
+            onClick={() => downloadImages(selectedSources, setIsClicked, updateStatus)}
+            loading={isClicked}
+            disabled={selectedSources.length === 0 || isDownloading}
+          >
+            <FiDownload />
+            Download Images
+          </Button>
+        </Center>
 
         <Separator my={3} />
 
         <Box>
-          <Text
-            fontSize="xs"
-            color="gray.500"
-            mb={2}
-            fontWeight="semibold"
-            textTransform="uppercase"
-          >
+          <Text fontSize="md" color="gray.500" fontWeight="semibold" textTransform="uppercase">
             Settings
           </Text>
-          <SiteParsingSetting onChange={(enabled) => loadImages(enabled)} isDisabled={isLoading} />
           <Box mt={1}>
+            <SiteParsingSetting
+              onChange={(enabled) => loadImages(enabled)}
+              isDisabled={isLoading}
+            />
+          </Box>
+          <Box mt={2}>
             <CloseTabAfterDownload />
           </Box>
           <Box mt={2}>
