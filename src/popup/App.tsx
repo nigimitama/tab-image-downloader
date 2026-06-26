@@ -11,99 +11,22 @@ import {
   Center,
 } from "@chakra-ui/react"
 import { FiDownload } from "react-icons/fi"
-import { getFileName } from "./imageUrl"
 import { t } from "./i18n"
-import {
-  getImageSources,
-  downloadFile,
-  waitForDownloadComplete,
-  getSyncData,
-  getSourceKey,
-  type ImageSource,
-  type DownloadStatus,
-} from "./chromeApi"
+import { getImageSources, getSyncData, getSourceKey, type ImageSource } from "./chromeApi"
 import { Settings } from "@/background"
 import { CloseTabAfterDownload } from "./components/CloseTabAfterDownload"
 import { DownloadDirSetting } from "./components/DownloadDirSetting"
 import { SiteParsingSetting } from "./components/SiteParsingSetting"
 import { ImageTabList } from "./components/ImageTabList"
 import { useSelection } from "./hooks/useSelection"
-
-const downloadImages = async (
-  sources: ImageSource[],
-  setIsClicked: (v: boolean) => void,
-  updateStatus: (key: string, status: DownloadStatus) => void,
-) => {
-  if (chrome.storage === undefined) return
-
-  setIsClicked(true)
-
-  try {
-    const storage = await getSyncData<Settings>(["isCloseTabAfterDownload", "downloadDir"])
-    const doClose = storage.isCloseTabAfterDownload
-    const downloadDir = storage.downloadDir
-
-    const tabDownloadCounts = new Map<number, { total: number; succeeded: number }>()
-    for (const source of sources) {
-      const tabId = source.tab.id
-      if (tabId === undefined) continue
-      const entry = tabDownloadCounts.get(tabId) ?? { total: 0, succeeded: 0 }
-      entry.total++
-      tabDownloadCounts.set(tabId, entry)
-    }
-
-    for (const source of sources) {
-      const tabId = source.tab.id
-      if (tabId === undefined) continue
-      const key = getSourceKey(source)
-      const fileName = getFileName(source.imageUrl)
-      const isEmpty = downloadDir === null || downloadDir === ""
-      const savePath = isEmpty ? fileName : `${downloadDir}/${fileName}`
-
-      updateStatus(key, "downloading")
-
-      try {
-        const downloadId = await downloadFile(source.imageUrl, savePath)
-        console.log(`File download started. Download ID: ${downloadId}`)
-        await waitForDownloadComplete(downloadId)
-        tabDownloadCounts.get(tabId)!.succeeded++
-        updateStatus(key, "completed")
-      } catch (error) {
-        console.error(`Download failed: ${error} | savePath=${savePath}, URL=${source.imageUrl}`)
-        updateStatus(key, "failed")
-      }
-    }
-
-    if (doClose) {
-      for (const [tabId, counts] of tabDownloadCounts) {
-        if (counts.succeeded === counts.total) {
-          chrome.tabs.remove(tabId, () => console.log(`Tab closed: ${tabId}`))
-        }
-      }
-    }
-  } finally {
-    setIsClicked(false)
-  }
-}
+import { useDownload } from "./hooks/useDownload"
 
 const App = () => {
   const [imageSources, setImageSources] = useState<ImageSource[] | null>(null)
-  const [isClicked, setIsClicked] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const { selectedIds, selectAll, toggleSelected, toggleAll, selectedSources } =
     useSelection(imageSources)
-  const [downloadStatuses, setDownloadStatuses] = useState<Map<string, DownloadStatus>>(new Map())
-
-  const isDownloading = Array.from(downloadStatuses.values()).some((s) => s === "downloading")
-
-  useEffect(() => {
-    if (!isDownloading) return
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-    }
-    window.addEventListener("beforeunload", handler)
-    return () => window.removeEventListener("beforeunload", handler)
-  }, [isDownloading])
+  const { isClicked, isDownloading, downloadStatuses, startDownload } = useDownload()
 
   const loadImages = async (isSiteParsingEnabled: boolean) => {
     setIsLoading(true)
@@ -129,14 +52,6 @@ const App = () => {
     }
     load()
   }, [])
-
-  const updateStatus = (key: string, status: DownloadStatus) => {
-    setDownloadStatuses((prev) => {
-      const next = new Map(prev)
-      next.set(key, status)
-      return next
-    })
-  }
 
   const visibleSources = (imageSources ?? []).filter(
     (source) => downloadStatuses.get(getSourceKey(source)) !== "completed",
@@ -176,7 +91,7 @@ const App = () => {
             colorPalette="blue"
             aria-label="Download"
             size="lg"
-            onClick={() => downloadImages(selectedSources, setIsClicked, updateStatus)}
+            onClick={() => startDownload(selectedSources)}
             loading={isClicked}
             disabled={selectedSources.length === 0 || isDownloading}
           >
