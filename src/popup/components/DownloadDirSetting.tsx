@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Button,
-  Input,
-  InputGroup,
-  InputLeftAddon,
-  InputRightElement,
-} from "@chakra-ui/react";
+import { Button, Group, Input, InputAddon } from "@chakra-ui/react";
 import { FaFolderOpen } from "react-icons/fa";
 import { setSyncData } from "@/popup/chromeApi";
 import { Settings } from "@/background";
@@ -33,15 +27,14 @@ export const DownloadDirSetting = () => {
   };
 
   return (
-    <InputGroup size="sm">
-      <InputLeftAddon fontSize="xs">
+    <Group attached>
+      <InputAddon fontSize="xs">
         {chrome.i18n === undefined
           ? "Chrome's Download Location"
           : chrome.i18n.getMessage("chromesDownloadLocation")} /
-      </InputLeftAddon>
+      </InputAddon>
       <Input
         type="text"
-        pr="4rem"
         value={downloadDir}
         onChange={handleChange}
         placeholder={chrome.i18n === undefined
@@ -49,17 +42,15 @@ export const DownloadDirSetting = () => {
           : chrome.i18n.getMessage("subdirectoryOptional")}
         fontSize="sm"
       />
-      <InputRightElement width="4.5rem">
-        <Button
-          h="1.6rem"
-          colorScheme="gray"
-          size="xs"
-          onClick={openFolder}
-          leftIcon={<FaFolderOpen />}
-        >
-          Open
-        </Button>
-      </InputRightElement>
-    </InputGroup>
+      <Button
+        colorPalette="gray"
+        size="sm"
+        variant="outline"
+        onClick={openFolder}
+      >
+        <FaFolderOpen />
+        Open
+      </Button>
+    </Group>
   );
 };

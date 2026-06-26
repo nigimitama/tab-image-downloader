@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { ChakraProvider } from '@chakra-ui/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { ChakraProvider, defaultSystem } from '@chakra-ui/react'
 import { ImageTabList } from '../popup/components/ImageTabList'
 import type { ImageSource } from '../popup/chromeApi'
 
 const renderWithChakra = (ui: React.ReactElement) =>
-  render(<ChakraProvider>{ui}</ChakraProvider>)
+  render(<ChakraProvider value={defaultSystem}>{ui}</ChakraProvider>)
 
 const makeSource = (id: number, imageUrl: string, tabUrl?: string): ImageSource => ({
   tab: { id, url: tabUrl ?? imageUrl } as chrome.tabs.Tab,
@@ -76,11 +77,8 @@ describe('ImageTabList', () => {
 
     const links = screen.getAllByRole('link')
     expect(links).toHaveLength(2)
-    // Primary link: the visible image URL navigates to that same image, so the
-    // displayed text and the click destination match.
     expect(links[0]).toHaveAttribute('href', 'https://pbs.twimg.com/media/abc?format=jpg&name=orig')
     expect(links[0]).toHaveTextContent('https://pbs.twimg.com/media/abc?format=jpg&name=orig')
-    // Secondary link: an explicit "source page" link back to the originating tab.
     expect(links[1]).toHaveAttribute('href', 'https://x.com/user/status/123/photo/1')
     expect(links[1]).toHaveTextContent('Open source page')
     expect(links[1]).toHaveAttribute('target', '_blank')
@@ -115,7 +113,6 @@ describe('ImageTabList', () => {
 
     renderList(sources)
 
-    // 2 rows + 1 "select all" header checkbox
     expect(screen.getAllByRole('checkbox')).toHaveLength(3)
     expect(screen.getByRole('checkbox', { name: 'Select all' })).toBeInTheDocument()
   })
@@ -133,7 +130,8 @@ describe('ImageTabList', () => {
     expect(row2).not.toBeChecked()
   })
 
-  it('calls onToggle with the tab id when a row checkbox is clicked', () => {
+  it('calls onToggle with the tab id when a row checkbox is clicked', async () => {
+    const user = userEvent.setup()
     const onToggle = vi.fn()
     const sources = [
       makeSource(10, 'https://example.com/photo1.png'),
@@ -143,21 +141,22 @@ describe('ImageTabList', () => {
     renderList(sources, { onToggle })
 
     const [, row1, row2] = screen.getAllByRole('checkbox')
-    fireEvent.click(row1)
-    fireEvent.click(row2)
+    await user.click(row1)
+    await user.click(row2)
 
     expect(onToggle).toHaveBeenCalledTimes(2)
     expect(onToggle).toHaveBeenNthCalledWith(1, 10)
     expect(onToggle).toHaveBeenNthCalledWith(2, 20)
   })
 
-  it('calls onToggleAll when the select-all checkbox is clicked', () => {
+  it('calls onToggleAll when the select-all checkbox is clicked', async () => {
+    const user = userEvent.setup()
     const onToggleAll = vi.fn()
     const sources = [makeSource(1, 'https://example.com/photo1.png')]
 
     renderList(sources, { onToggleAll })
 
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select all' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Select all' }))
 
     expect(onToggleAll).toHaveBeenCalledTimes(1)
   })
@@ -173,7 +172,7 @@ describe('ImageTabList', () => {
     expect(screen.getByRole('checkbox', { name: 'Select all' })).not.toBePartiallyChecked()
 
     const withProps = (selectedIds: Set<number>) => (
-      <ChakraProvider>
+      <ChakraProvider value={defaultSystem}>
         <ImageTabList sources={sources} selectedIds={selectedIds} onToggle={() => {}} onToggleAll={() => {}} downloadStatuses={defaultDownloadStatuses} isDownloading={false} />
       </ChakraProvider>
     )

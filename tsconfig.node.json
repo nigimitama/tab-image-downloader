@@ -14,7 +14,8 @@
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "types": ["node", "chrome"]
   },
   "include": ["vite.config.ts", "playwright.config.ts", "e2e/**/*.ts"]
 }

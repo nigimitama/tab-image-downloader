@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Button, Text, ChakraProvider, Divider, Box, Spinner, Flex } from "@chakra-ui/react";
-import { DownloadIcon } from "@chakra-ui/icons";
+import { Button, Text, ChakraProvider, Separator, Box, Spinner, Flex, defaultSystem } from "@chakra-ui/react";
+import { FiDownload } from "react-icons/fi";
 import { getFileName } from "./imageUrl";
 import {
   getImageSources,
@@ -160,7 +160,7 @@ const App = () => {
   );
 
   return (
-    <ChakraProvider>
+    <ChakraProvider value={defaultSystem}>
       <div style={{ margin: "10px", width: "500px" }}>
         {isLoading ? (
           <Flex align="center" gap={2}>
@@ -189,18 +189,18 @@ const App = () => {
         <Button
           style={{ marginTop: "10px", display: "block", margin: "10px auto 0" }}
           variant="outline"
-          colorScheme="blue"
+          colorPalette="blue"
           aria-label="Download"
           size="lg"
-          leftIcon={<DownloadIcon />}
           onClick={() => downloadImages(selectedSources, setIsClicked, updateStatus)}
-          isLoading={isClicked}
-          isDisabled={selectedSources.length === 0 || isDownloading}
+          loading={isClicked}
+          disabled={selectedSources.length === 0 || isDownloading}
         >
+          <FiDownload />
           Download Images
         </Button>
 
-        <Divider my={3} />
+        <Separator my={3} />
 
         <Box>
           <Text
