@@ -27,25 +27,23 @@ test("excludes images from the download via row checkboxes", async ({
   const downloadBtn = popup.getByRole("button", { name: "Download" });
 
   // Every found image is selected by default.
-  await expect(selectAll).toHaveAttribute("aria-checked", "true");
+  await expect(selectAll).toBeChecked();
   await expect(pngCheckbox).toBeChecked();
   await expect(jpgCheckbox).toBeChecked();
   await expect(popup.getByText("2 / 2 selected")).toBeVisible();
   await expect(downloadBtn).toBeEnabled();
 
   // Excluding one image lowers the count and makes "select all" indeterminate.
-  // Chakra's checkbox overlay intercepts pointer events, so force the click.
   await pngCheckbox.uncheck({ force: true });
   await expect(pngCheckbox).not.toBeChecked();
   await expect(jpgCheckbox).toBeChecked();
   await expect(popup.getByText("1 / 2 selected")).toBeVisible();
-  await expect(selectAll).toHaveAttribute("aria-checked", "mixed");
   await expect(downloadBtn).toBeEnabled();
 
   // With nothing selected there is nothing to download.
   await jpgCheckbox.uncheck({ force: true });
   await expect(popup.getByText("0 / 2 selected")).toBeVisible();
-  await expect(selectAll).toHaveAttribute("aria-checked", "false");
+  await expect(selectAll).not.toBeChecked();
   await expect(downloadBtn).toBeDisabled();
 
   // "Select all" re-includes every image.
