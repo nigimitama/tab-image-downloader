@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react"
-import {
-  Button,
-  Text,
-  ChakraProvider,
-  Separator,
-  Spinner,
-  Flex,
-  defaultSystem,
-  Center,
-} from "@chakra-ui/react"
+import { Button, Text, Separator, Spinner, Flex, Center } from "@chakra-ui/react"
 import { FiDownload } from "react-icons/fi"
 import { t } from "./i18n"
 import { getImageSources, getSyncData, getSourceKey, type ImageSource } from "./chromeApi"
@@ -55,53 +46,54 @@ const App = () => {
   )
 
   return (
-    <ChakraProvider value={defaultSystem}>
-      <div style={{ margin: "10px", width: "600px" }}>
-        {isLoading ? (
-          <Flex align="center" gap={2}>
-            <Spinner size="sm" color="blue.500" />
-            <Text fontSize="md">Checking tabs...</Text>
-          </Flex>
-        ) : (
-          <Text fontSize="md">
-            {imageSources !== null
-              ? t("imageTabsFound", `${imageSources.length} image tabs found.`, [
-                  String(imageSources.length),
-                ])
-              : ""}
-          </Text>
-        )}
+    <div style={{ margin: "10px", width: "600px" }}>
+      {isLoading ? (
+        <Flex align="center" gap={2}>
+          <Spinner size="sm" color="blue.500" />
+          <Text fontSize="md">Checking tabs...</Text>
+        </Flex>
+      ) : (
+        <Text fontSize="md">
+          {imageSources !== null
+            ? t("imageTabsFound", `${imageSources.length} image tabs found.`, [
+                String(imageSources.length),
+              ])
+            : ""}
+        </Text>
+      )}
 
-        <ImageTabList
-          sources={visibleSources}
-          selectedIds={selectedIds}
-          onToggle={toggleSelected}
-          onToggleAll={toggleAll}
-          downloadStatuses={downloadStatuses}
-          isDownloading={isDownloading}
-        />
+      <ImageTabList
+        sources={visibleSources}
+        selectedIds={selectedIds}
+        onToggle={toggleSelected}
+        onToggleAll={toggleAll}
+        downloadStatuses={downloadStatuses}
+        isDownloading={isDownloading}
+      />
 
-        <Center>
-          <Button
-            style={{ marginTop: "10px" }}
-            variant="outline"
-            colorPalette="blue"
-            aria-label="Download"
-            size="lg"
-            onClick={() => startDownload(selectedSources)}
-            loading={isClicked}
-            disabled={selectedSources.length === 0 || isDownloading}
-          >
-            <FiDownload />
-            Download Images
-          </Button>
-        </Center>
+      <Center>
+        <Button
+          style={{ marginTop: "10px" }}
+          variant="outline"
+          colorPalette="blue"
+          aria-label="Download"
+          size="lg"
+          onClick={() => startDownload(selectedSources)}
+          loading={isClicked}
+          disabled={selectedSources.length === 0 || isDownloading}
+        >
+          <FiDownload />
+          Download Images
+        </Button>
+      </Center>
 
-        <Separator my={3} />
+      <Separator my={3} />
 
-        <SettingsSection onSiteParsingChange={(enabled) => loadImages(enabled)} isLoading={isLoading} />
-      </div>
-    </ChakraProvider>
+      <SettingsSection
+        onSiteParsingChange={(enabled) => loadImages(enabled)}
+        isLoading={isLoading}
+      />
+    </div>
   )
 }
 
