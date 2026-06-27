@@ -25,5 +25,8 @@
   },
   "downloadFailed": {
     "message": "Download failed"
+  },
+  "optionDarkModeDesc": {
+    "message": "Dark mode"
   }
 }

@@ -1,5 +1,6 @@
 import { Box, Text } from "@chakra-ui/react"
 import { CloseTabAfterDownload } from "./CloseTabAfterDownload"
+import { DarkModeSwitch } from "./DarkModeSwitch"
 import { DownloadDirSetting } from "./DownloadDirSetting"
 import { SiteParsingSetting } from "./SiteParsingSetting"
 
@@ -19,6 +20,9 @@ export const SettingsSection = ({
     </Box>
     <Box mt={2}>
       <CloseTabAfterDownload />
+    </Box>
+    <Box mt={2}>
+      <DarkModeSwitch />
     </Box>
     <Box mt={2}>
       <DownloadDirSetting />

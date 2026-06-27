@@ -2,12 +2,14 @@ export type Settings = {
   isCloseTabAfterDownload: boolean
   downloadDir: string | null
   isSiteParsingEnabled: boolean
+  isDarkMode: boolean | null
 }
 
 const defaultSettings: Settings = {
   isCloseTabAfterDownload: true,
   downloadDir: null, // if null, use default download directory
   isSiteParsingEnabled: true,
+  isDarkMode: null, // null = follow OS setting
 }
 
 const setupRefererRules = () => {
