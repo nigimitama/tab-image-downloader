@@ -49,7 +49,9 @@ export const ImageTabList = ({
           <Checkbox.HiddenInput />
           <Checkbox.Control />
           <Checkbox.Label>
-            <Text fontSize="xs">Select all</Text>
+            <Text fontSize="xs" color="gray.500">
+              Select all
+            </Text>
           </Checkbox.Label>
         </Checkbox.Root>
         <Text fontSize="xs" color="gray.500">
