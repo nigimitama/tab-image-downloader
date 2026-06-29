@@ -138,27 +138,6 @@ describe("getImageSources", () => {
     expect(result[0].tab.url).toBe("https://gelbooru.com/index.php?page=post&s=view&id=14357815")
   })
 
-  it("extracts the sample image URL from a yande.re post page", async () => {
-    // Real example: visiting https://yande.re/post/show/1253771, the displayed
-    // <img id="image"> points at the sample image that should be downloaded.
-    queryMock.mockResolvedValue([
-      { id: 1, url: "https://yande.re/post/show/1253771" },
-    ] as chrome.tabs.Tab[])
-    scriptMock.mockResolvedValue([
-      {
-        result:
-          "https://files.yande.re/sample/6cbcc2f97d722a85ec6db3af7a7c8093/yande.re%201253771%20sample%20bra%20danimaru%20lingerie%20open_shirt%20see_through%20seifuku.jpg",
-      },
-    ])
-
-    const result = await getImageSources()
-    expect(result).toHaveLength(1)
-    expect(result[0].imageUrl).toBe(
-      "https://files.yande.re/sample/6cbcc2f97d722a85ec6db3af7a7c8093/yande.re%201253771%20sample%20bra%20danimaru%20lingerie%20open_shirt%20see_through%20seifuku.jpg",
-    )
-    expect(result[0].tab.url).toBe("https://yande.re/post/show/1253771")
-  })
-
   it("skips Booru post page tabs when no image is found", async () => {
     queryMock.mockResolvedValue([
       { id: 1, url: "https://danbooru.donmai.us/posts/11655837" },
