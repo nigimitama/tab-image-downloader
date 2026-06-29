@@ -20,9 +20,6 @@ export default defineManifest({
   host_permissions: [
     "https://x.com/*",
     "https://twitter.com/*",
-    "https://*.donmai.us/*",
-    "https://gelbooru.com/*",
-    "https://*.gelbooru.com/*",
     "https://www.pixiv.net/*",
     "https://pixiv.net/*",
     "https://*.pximg.net/*",

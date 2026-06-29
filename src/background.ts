@@ -14,32 +14,10 @@ const defaultSettings: Settings = {
 
 const setupRefererRules = () => {
   chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: [1, 2],
+    removeRuleIds: [1],
     addRules: [
       {
         id: 1,
-        priority: 1,
-        action: {
-          type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
-          requestHeaders: [
-            {
-              header: "Referer",
-              operation: chrome.declarativeNetRequest.HeaderOperation.SET,
-              value: "https://gelbooru.com/",
-            },
-          ],
-        },
-        condition: {
-          requestDomains: ["gelbooru.com"],
-          resourceTypes: [
-            chrome.declarativeNetRequest.ResourceType.IMAGE,
-            chrome.declarativeNetRequest.ResourceType.OTHER,
-            chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST,
-          ],
-        },
-      },
-      {
-        id: 2,
         priority: 1,
         action: {
           type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
@@ -76,7 +54,7 @@ chrome.runtime.onStartup.addListener(() => {
 const needsRefererDownload = (url: string): boolean => {
   try {
     const host = new URL(url).hostname
-    return host.endsWith("pximg.net") || host.endsWith("gelbooru.com")
+    return host.endsWith("pximg.net")
   } catch {
     return false
   }

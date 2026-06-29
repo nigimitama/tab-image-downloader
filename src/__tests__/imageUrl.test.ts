@@ -8,9 +8,6 @@ import {
   upgradeTwitterImageUrl,
   getFileName,
   sleep,
-  isDanbooruPostPage,
-  isGelbooruPostPage,
-  isBooruPostPage,
   isPixivArtworkPage,
 } from "../popup/imageUrl"
 
@@ -98,59 +95,6 @@ describe("getXPhotoIndex", () => {
   })
 })
 
-describe("isDanbooruPostPage", () => {
-  it.each([
-    "https://danbooru.donmai.us/posts/11655837",
-    "https://danbooru.donmai.us/posts/1",
-    "https://safebooru.donmai.us/posts/123",
-  ])("returns true for Danbooru post page: %s", (url) => {
-    expect(isDanbooruPostPage(url)).toBe(true)
-  })
-
-  it.each([
-    "https://danbooru.donmai.us/posts",
-    "https://danbooru.donmai.us/posts/abc",
-    "https://danbooru.donmai.us/posts/123/edit",
-    "https://danbooru.donmai.us/",
-    "https://evil-donmai.us/posts/123",
-    "https://example.com/posts/123",
-  ])("returns false for non post page: %s", (url) => {
-    expect(isDanbooruPostPage(url)).toBe(false)
-  })
-})
-
-describe("isGelbooruPostPage", () => {
-  it.each([
-    "https://gelbooru.com/index.php?page=post&s=view&id=14357815",
-    "https://gelbooru.com/index.php?page=post&s=view&id=1&tags=foo",
-  ])("returns true for Gelbooru post page: %s", (url) => {
-    expect(isGelbooruPostPage(url)).toBe(true)
-  })
-
-  it.each([
-    "https://gelbooru.com/index.php?page=post&s=list&tags=foo",
-    "https://gelbooru.com/index.php?page=post&s=view",
-    "https://gelbooru.com/index.php?page=post&s=view&id=abc",
-    "https://gelbooru.com/",
-    "https://example.com/index.php?page=post&s=view&id=1",
-  ])("returns false for non post page: %s", (url) => {
-    expect(isGelbooruPostPage(url)).toBe(false)
-  })
-})
-
-describe("isBooruPostPage", () => {
-  it("returns true for Danbooru and Gelbooru post pages", () => {
-    expect(isBooruPostPage("https://danbooru.donmai.us/posts/11655837")).toBe(true)
-    expect(isBooruPostPage("https://gelbooru.com/index.php?page=post&s=view&id=14357815")).toBe(
-      true,
-    )
-  })
-
-  it("returns false for unrelated pages", () => {
-    expect(isBooruPostPage("https://example.com/page.html")).toBe(false)
-  })
-})
-
 describe("isPixivArtworkPage", () => {
   it.each([
     "https://www.pixiv.net/artworks/12345678",
@@ -224,24 +168,6 @@ describe("getFileName", () => {
 
   it("returns empty string for root URL", () => {
     expect(getFileName("https://example.com/")).toBe("")
-  })
-
-  it("extracts filename from a Danbooru sample URL", () => {
-    expect(
-      getFileName(
-        "https://cdn.donmai.us/sample/ea/48/__moria_luluka_and_mashu_tan_precure_and_1_more_drawn_by_ryuhirohumi__sample-ea48f0b280a1d3f7efc3501f72a4ba9a.jpg",
-      ),
-    ).toBe(
-      "__moria_luluka_and_mashu_tan_precure_and_1_more_drawn_by_ryuhirohumi__sample-ea48f0b280a1d3f7efc3501f72a4ba9a.jpg",
-    )
-  })
-
-  it("extracts filename from a Gelbooru sample URL with a double slash", () => {
-    expect(
-      getFileName(
-        "https://img4.gelbooru.com//samples/15/65/sample_156599b000c99a786d987fa30ab25d27.jpg",
-      ),
-    ).toBe("sample_156599b000c99a786d987fa30ab25d27.jpg")
   })
 
   it("extracts filename from a Pixiv image URL", () => {

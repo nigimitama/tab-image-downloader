@@ -47,40 +47,6 @@ export const getXPhotoIndex = (url: string): number => {
   return match ? Number(match[1]) - 1 : 0
 }
 
-// Booru-type image boards show a single post per page with the image rendered
-// in an <img id="image"> element. We detect such post pages by URL and extract
-// the displayed image from the DOM (see extractBooruImageUrl).
-const isDonmaiHost = (host: string): boolean => host === "donmai.us" || host.endsWith(".donmai.us")
-
-// Danbooru engine (danbooru.donmai.us, safebooru.donmai.us, ...): /posts/<id>
-export const isDanbooruPostPage = (url: string): boolean => {
-  try {
-    const u = new URL(url)
-    return isDonmaiHost(u.host) && /^\/posts\/\d+$/.test(u.pathname)
-  } catch {
-    return false
-  }
-}
-
-// Gelbooru engine: /index.php?page=post&s=view&id=<id>
-export const isGelbooruPostPage = (url: string): boolean => {
-  try {
-    const u = new URL(url)
-    return (
-      u.host === "gelbooru.com" &&
-      u.pathname === "/index.php" &&
-      u.searchParams.get("page") === "post" &&
-      u.searchParams.get("s") === "view" &&
-      /^\d+$/.test(u.searchParams.get("id") ?? "")
-    )
-  } catch {
-    return false
-  }
-}
-
-export const isBooruPostPage = (url: string): boolean =>
-  isDanbooruPostPage(url) || isGelbooruPostPage(url)
-
 // Pixiv artwork pages: /artworks/<id> (with optional language prefix like /en/)
 export const isPixivArtworkPage = (url: string): boolean => {
   try {
