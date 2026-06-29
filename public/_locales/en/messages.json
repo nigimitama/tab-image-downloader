@@ -4,7 +4,7 @@
     "description": "for the description field in manifest.json"
   },
   "optionSiteParsingDesc": {
-    "message": "Extract images from supported sites (X, Pixiv, etc.)"
+    "message": "Extract images from displayed page (X and Pixiv only)"
   },
   "optionTabCloseDesc": {
     "message": "Close the image tabs after downloading"

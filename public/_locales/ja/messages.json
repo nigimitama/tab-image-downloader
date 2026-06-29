@@ -4,7 +4,7 @@
     "description": "manifest.jsonのdescription用"
   },
   "optionSiteParsingDesc": {
-    "message": "表示中のサイトから画像を抽出する（X、Pixivなど）"
+    "message": "表示中のサイトから画像を抽出する（X、Pixivのみ対応）"
   },
   "optionTabCloseDesc": {
     "message": "画像をダウンロード後にタブを閉じる"
