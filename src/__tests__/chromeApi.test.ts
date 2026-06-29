@@ -93,74 +93,6 @@ describe("getImageSources", () => {
     expect(result[0].imageUrl).toBe("https://pbs.twimg.com/media/img1?format=jpg&name=orig")
   })
 
-  it("extracts the sample image URL from a Danbooru post page", async () => {
-    // Real example: visiting the post page below, the displayed <img id="image">
-    // points at the sample image that should be downloaded.
-    queryMock.mockResolvedValue([
-      { id: 1, url: "https://danbooru.donmai.us/posts/11655837" },
-    ] as chrome.tabs.Tab[])
-    scriptMock.mockResolvedValue([
-      {
-        result:
-          "https://cdn.donmai.us/sample/ea/48/__moria_luluka_and_mashu_tan_precure_and_1_more_drawn_by_ryuhirohumi__sample-ea48f0b280a1d3f7efc3501f72a4ba9a.jpg",
-      },
-    ])
-
-    const result = await getImageSources()
-    expect(result).toHaveLength(1)
-    expect(result[0].imageUrl).toBe(
-      "https://cdn.donmai.us/sample/ea/48/__moria_luluka_and_mashu_tan_precure_and_1_more_drawn_by_ryuhirohumi__sample-ea48f0b280a1d3f7efc3501f72a4ba9a.jpg",
-    )
-    expect(result[0].tab.url).toBe("https://danbooru.donmai.us/posts/11655837")
-  })
-
-  it("extracts the sample image URL from a Gelbooru post page", async () => {
-    // Real example: visiting the post page below, the displayed <img id="image">
-    // points at the sample image that should be downloaded.
-    queryMock.mockResolvedValue([
-      {
-        id: 1,
-        url: "https://gelbooru.com/index.php?page=post&s=view&id=14357815",
-      },
-    ] as chrome.tabs.Tab[])
-    scriptMock.mockResolvedValue([
-      {
-        result:
-          "https://img4.gelbooru.com//samples/15/65/sample_156599b000c99a786d987fa30ab25d27.jpg",
-      },
-    ])
-
-    const result = await getImageSources()
-    expect(result).toHaveLength(1)
-    expect(result[0].imageUrl).toBe(
-      "https://img4.gelbooru.com//samples/15/65/sample_156599b000c99a786d987fa30ab25d27.jpg",
-    )
-    expect(result[0].tab.url).toBe("https://gelbooru.com/index.php?page=post&s=view&id=14357815")
-  })
-
-  it("skips Booru post page tabs when no image is found", async () => {
-    queryMock.mockResolvedValue([
-      { id: 1, url: "https://danbooru.donmai.us/posts/11655837" },
-    ] as chrome.tabs.Tab[])
-    scriptMock.mockResolvedValue([{ result: null }])
-
-    const result = await getImageSources()
-    expect(result).toHaveLength(0)
-  })
-
-  it("skips Booru post page tabs when script injection fails", async () => {
-    queryMock.mockResolvedValue([
-      {
-        id: 1,
-        url: "https://gelbooru.com/index.php?page=post&s=view&id=14357815",
-      },
-    ] as chrome.tabs.Tab[])
-    scriptMock.mockRejectedValue(new Error("injection failed"))
-
-    const result = await getImageSources()
-    expect(result).toHaveLength(0)
-  })
-
   it("extracts image URL from a Pixiv artwork page", async () => {
     queryMock.mockResolvedValue([
       { id: 1, url: "https://www.pixiv.net/artworks/12345678" },
@@ -246,8 +178,7 @@ describe("getImageSources", () => {
     queryMock.mockResolvedValue([
       { id: 1, url: "https://example.com/photo.png" },
       { id: 2, url: "https://x.com/user/status/123/photo/1" },
-      { id: 3, url: "https://danbooru.donmai.us/posts/11655837" },
-      { id: 4, url: "https://www.pixiv.net/artworks/12345678" },
+      { id: 3, url: "https://www.pixiv.net/artworks/12345678" },
     ] as chrome.tabs.Tab[])
 
     const result = await getImageSources({ isSiteParsingEnabled: false })

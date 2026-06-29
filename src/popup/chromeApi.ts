@@ -3,7 +3,6 @@ import {
   isXPhotoPage,
   getXPhotoIndex,
   upgradeTwitterImageUrl,
-  isBooruPostPage,
   isPixivArtworkPage,
 } from "@/popup/imageUrl"
 
@@ -49,19 +48,6 @@ export const extractImageUrlsFromTab = async (tabId: number): Promise<string[]> 
     },
   })
   return results?.[0]?.result ?? []
-}
-
-// Booru post pages (Danbooru, Gelbooru, ...) render the displayed image in an
-// <img id="image"> element. Extract its src to download the shown image.
-export const extractBooruImageUrl = async (tabId: number): Promise<string | null> => {
-  const results = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => {
-      const img = document.querySelector<HTMLImageElement>("#image")
-      return img?.src ?? null
-    },
-  })
-  return results?.[0]?.result ?? null
 }
 
 // Pixiv artwork pages render images from i.pximg.net.  Multi-page works
@@ -122,16 +108,6 @@ export const getImageSources = async (
           const imageUrl = urls[index] ?? urls[0]
           if (imageUrl) {
             return { tab, imageUrl: upgradeTwitterImageUrl(imageUrl) }
-          }
-        } catch (e) {
-          console.error(`Failed to extract image from tab ${tab.id}:`, e)
-        }
-      }
-      if (isBooruPostPage(tab.url)) {
-        try {
-          const imageUrl = await extractBooruImageUrl(tab.id)
-          if (imageUrl) {
-            return { tab, imageUrl }
           }
         } catch (e) {
           console.error(`Failed to extract image from tab ${tab.id}:`, e)
