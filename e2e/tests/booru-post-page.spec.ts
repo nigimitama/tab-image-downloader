@@ -17,7 +17,6 @@ const extractionScript = `
 for (const site of [
   { name: "Danbooru", page: "danbooru-post-page.html" },
   { name: "Gelbooru", page: "gelbooru-post-page.html" },
-  { name: "yande.re", page: "yandere-post-page.html" },
 ]) {
   test.describe(site.name, () => {
     test("extraction script returns the displayed #image src", async ({

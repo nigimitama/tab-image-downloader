@@ -23,8 +23,6 @@ export default defineManifest({
     "https://*.donmai.us/*",
     "https://gelbooru.com/*",
     "https://*.gelbooru.com/*",
-    "https://yande.re/*",
-    "https://files.yande.re/*",
     "https://www.pixiv.net/*",
     "https://pixiv.net/*",
     "https://*.pximg.net/*",

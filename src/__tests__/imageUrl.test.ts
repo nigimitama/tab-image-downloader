@@ -10,7 +10,6 @@ import {
   sleep,
   isDanbooruPostPage,
   isGelbooruPostPage,
-  isYanderePostPage,
   isBooruPostPage,
   isPixivArtworkPage,
 } from "../popup/imageUrl"
@@ -139,37 +138,12 @@ describe("isGelbooruPostPage", () => {
   })
 })
 
-describe("isYanderePostPage", () => {
-  it.each([
-    "https://yande.re/post/show/1253771",
-    "https://yande.re/post/show/1",
-    // yande.re sometimes appends a tag slug after the id
-    "https://yande.re/post/show/1253771/bra",
-  ])("returns true for yande.re post page: %s", (url) => {
-    expect(isYanderePostPage(url)).toBe(true)
-  })
-
-  it.each([
-    "https://yande.re/post/show",
-    "https://yande.re/post/show/abc",
-    "https://yande.re/post",
-    "https://yande.re/",
-    "https://yande.re/pool/show/123",
-    "https://yande.re.evil.com/post/show/123",
-    "https://files.yande.re/post/show/123",
-    "https://example.com/post/show/123",
-  ])("returns false for non post page: %s", (url) => {
-    expect(isYanderePostPage(url)).toBe(false)
-  })
-})
-
 describe("isBooruPostPage", () => {
-  it("returns true for Danbooru, Gelbooru and yande.re post pages", () => {
+  it("returns true for Danbooru and Gelbooru post pages", () => {
     expect(isBooruPostPage("https://danbooru.donmai.us/posts/11655837")).toBe(true)
     expect(isBooruPostPage("https://gelbooru.com/index.php?page=post&s=view&id=14357815")).toBe(
       true,
     )
-    expect(isBooruPostPage("https://yande.re/post/show/1253771")).toBe(true)
   })
 
   it("returns false for unrelated pages", () => {
