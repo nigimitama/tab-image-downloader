@@ -1,3 +1,4 @@
+import { FiSearch } from "react-icons/fi"
 import { SyncSwitch } from "./SyncSwitch"
 
 export const SiteParsingSetting = ({
@@ -14,5 +15,8 @@ export const SiteParsingSetting = ({
     defaultValue={true}
     onChange={onChange}
     disabled={isDisabled}
+    icon={FiSearch}
+    iconColor="blue.500"
+    uncheckedIconColor="gray.400"
   />
 )

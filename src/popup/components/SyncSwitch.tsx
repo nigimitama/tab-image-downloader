@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
-import { Switch, Text } from "@chakra-ui/react"
+import { Switch, Icon, Text } from "@chakra-ui/react"
+import { IconType } from "react-icons"
 import { setSyncData } from "@/popup/chromeApi"
 import { t } from "@/popup/i18n"
 import { Settings } from "@/background"
@@ -11,6 +12,9 @@ export const SyncSwitch = ({
   defaultValue = false,
   onChange,
   disabled = false,
+  icon: IconComponent,
+  iconColor,
+  uncheckedIconColor,
 }: {
   storageKey: keyof Settings
   messageKey: string
@@ -18,6 +22,9 @@ export const SyncSwitch = ({
   defaultValue?: boolean
   onChange?: (checked: boolean) => void
   disabled?: boolean
+  icon?: IconType
+  iconColor?: string
+  uncheckedIconColor?: string
 }) => {
   const [isChecked, setIsChecked] = useState(defaultValue)
 
@@ -35,9 +42,16 @@ export const SyncSwitch = ({
   }
 
   return (
-    <Switch.Root size="sm" checked={isChecked} disabled={disabled} onCheckedChange={handleCheck}>
+    <Switch.Root size="md" checked={isChecked} disabled={disabled} onCheckedChange={handleCheck}>
       <Switch.HiddenInput />
-      <Switch.Control />
+      <Switch.Control>
+        <Switch.Thumb />
+        {IconComponent && (
+          <Switch.Indicator fallback={<Icon as={IconComponent} color={uncheckedIconColor ?? iconColor} />}>
+            <Icon as={IconComponent} color={iconColor} />
+          </Switch.Indicator>
+        )}
+      </Switch.Control>
       <Switch.Label>
         <Text fontSize="sm">{t(messageKey, fallbackLabel)}</Text>
       </Switch.Label>
