@@ -42,8 +42,9 @@ const setupRefererRules = () => {
   })
 }
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set(defaultSettings)
+chrome.runtime.onInstalled.addListener(async () => {
+  const current = await chrome.storage.sync.get(Object.keys(defaultSettings))
+  chrome.storage.sync.set({ ...defaultSettings, ...current })
   setupRefererRules()
 })
 
