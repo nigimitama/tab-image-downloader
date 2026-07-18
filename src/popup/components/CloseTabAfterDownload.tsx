@@ -6,6 +6,7 @@ export const CloseTabAfterDownload = () => (
     storageKey="isCloseTabAfterDownload"
     messageKey="optionTabCloseDesc"
     fallbackLabel="optionTabCloseDesc"
+    defaultValue={true}
     icon={FiX}
     iconColor="red.500"
     uncheckedIconColor="gray.400"
