@@ -45,7 +45,15 @@ const setupRefererRules = () => {
 chrome.runtime.onInstalled.addListener(async () => {
   try {
     const current = await chrome.storage.sync.get(Object.keys(defaultSettings))
-    chrome.storage.sync.set({ ...defaultSettings, ...current })
+    const missing = Object.fromEntries(
+      (Object.keys(defaultSettings) as (keyof Settings)[]).filter((key) => !(key in current)).map((key) => [key, defaultSettings[key]]),
+    )
+    // Only write keys that are actually missing, so an in-flight settings
+    // change made elsewhere (e.g. the popup) right after install/update is
+    // never clobbered by re-writing keys that already exist.
+    if (Object.keys(missing).length > 0) {
+      await chrome.storage.sync.set(missing)
+    }
   } finally {
     setupRefererRules()
   }

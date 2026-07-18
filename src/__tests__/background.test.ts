@@ -19,19 +19,32 @@ describe("onInstalled", () => {
     await import("../background")
   })
 
-  it("merges defaults with existing settings, keeping saved values", async () => {
+  it("only fills in missing keys, leaving existing saved values untouched", async () => {
     getMock.mockResolvedValue({ downloadDir: "existing-dir" })
 
     await getOnInstalledListener()()
 
-    expect(setMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        downloadDir: "existing-dir",
-        isCloseTabAfterDownload: true,
-        isSiteParsingEnabled: true,
-        isDarkMode: null,
-      }),
-    )
+    expect(setMock).toHaveBeenCalledWith({
+      isCloseTabAfterDownload: true,
+      isSiteParsingEnabled: true,
+      isDarkMode: null,
+    })
+  })
+
+  it("does not write to storage when every key already exists", async () => {
+    // Regression guard: writing unconditionally here raced with settings
+    // changes made elsewhere (e.g. the popup) right after install/update,
+    // silently reverting them. See #onInstalled fix.
+    getMock.mockResolvedValue({
+      isCloseTabAfterDownload: false,
+      downloadDir: "existing-dir",
+      isSiteParsingEnabled: false,
+      isDarkMode: true,
+    })
+
+    await getOnInstalledListener()()
+
+    expect(setMock).not.toHaveBeenCalled()
   })
 
   it("falls back to defaults when no existing settings are saved", async () => {
