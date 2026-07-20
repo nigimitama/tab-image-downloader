@@ -40,6 +40,27 @@ export const test = base.extend<{
       serviceWorker = await context.waitForEvent("serviceworker");
     }
     const extensionId = serviceWorker.url().split("/")[2];
+
+    // background.ts populates default settings asynchronously in its
+    // onInstalled listener. Wait for that write to land before tests start
+    // interacting with the popup, otherwise the popup can read storage
+    // before defaults exist and a settings write from the test can race
+    // with (and be clobbered by) the still-in-flight onInstalled write.
+    await serviceWorker.evaluate(async () => {
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          chrome.storage.sync.get(["isCloseTabAfterDownload"], (result) => {
+            if (result.isCloseTabAfterDownload !== undefined) {
+              resolve();
+            } else {
+              setTimeout(check, 20);
+            }
+          });
+        };
+        check();
+      });
+    });
+
     await use(extensionId);
   },
 
