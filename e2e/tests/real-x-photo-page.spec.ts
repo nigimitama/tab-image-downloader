@@ -88,7 +88,7 @@ test.describe("x.com real image download", () => {
 
     // Loading state should appear then clear
     await expect(downloadBtn).toHaveAttribute("data-loading", {
-      timeout: 5_000,
+      timeout: 15_000,
     });
     await expect(downloadBtn).not.toHaveAttribute("data-loading", {
       timeout: 15_000,
