@@ -1,4 +1,20 @@
-const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"]
+const IMAGE_EXTENSIONS = [
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "bmp",
+  "webp",
+  "svg",
+  "avif",
+  "heic",
+  "heif",
+  "ico",
+  "tif",
+  "tiff",
+  "jfif",
+  "apng",
+]
 
 export const isImageURL = (url: string): boolean => {
   return isImageFormat(url) || isTwitterImage(url)

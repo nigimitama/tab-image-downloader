@@ -20,6 +20,14 @@ describe("isImageFormat", () => {
     "https://example.com/photo.bmp",
     "https://example.com/photo.webp",
     "https://example.com/photo.svg",
+    "https://example.com/photo.avif",
+    "https://example.com/photo.heic",
+    "https://example.com/photo.heif",
+    "https://example.com/photo.ico",
+    "https://example.com/photo.tif",
+    "https://example.com/photo.tiff",
+    "https://example.com/photo.jfif",
+    "https://example.com/photo.apng",
   ])("returns true for image URL: %s", (url) => {
     expect(isImageFormat(url)).toBe(true)
   })
@@ -47,7 +55,23 @@ describe("isTwitterImage", () => {
     ).toBe(true)
   })
 
-  it.each(["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"])("supports format=%s", (format) => {
+  it.each([
+    "jpg",
+    "jpeg",
+    "png",
+    "gif",
+    "bmp",
+    "webp",
+    "svg",
+    "avif",
+    "heic",
+    "heif",
+    "ico",
+    "tif",
+    "tiff",
+    "jfif",
+    "apng",
+  ])("supports format=%s", (format) => {
     expect(isTwitterImage(`https://pbs.twimg.com/media/abc123?format=${format}&name=orig`)).toBe(
       true,
     )
